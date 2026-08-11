@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+load_dotenv("/home/MAmir353/My-paserver/.env")
 from flask_cors import CORS
 import os
 import json
