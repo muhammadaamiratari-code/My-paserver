@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<title>MyPA AI Hub</title>
+
+<!-- Main CSS -->
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =========================
+       TOP HEADER
+       ========================= -->
+  <header class="top">
+
+    <!-- 3-Line Main Menu -->
+    <button
+      class="iconbtn"
+      id="menuButton"
+      type="button"
+      aria-label="Main Menu"
+      aria-controls="mainMenu"
+      aria-expanded="false"
+    >
+      <div class="menu-lines">
+        <span></span>
+      </div>
+    </button>
+
+    <!-- Brand -->
+    <div class="brand">
+      MyPA <small>AI Hub</small>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="top-actions">
+
+      <!-- 3-Dot Menu -->
+      <button
+        class="iconbtn"
+        id="moreButton"
+        type="button"
+        aria-label="More Options"
+        aria-controls="moreMenu"
+        aria-expanded="false"
+      >
+        <span class="three-dots" aria-hidden="true">
+          <i></i>
+          <i></i>
+          <i></i>
+        </span>
+      </button>
+
+      <!-- New Chat -->
+      <button
+        class="iconbtn"
+        id="newChatButton"
+        type="button"
+        aria-label="New Chat"
+      >
+        ✎
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- =========================
+       MAIN CHAT AREA
+       ========================= -->
+  <main
+    id="chat"
+    class="chat"
+    aria-live="polite"
+    aria-label="Chat Messages"
+  >
+    <div id="empty" class="empty">
+      MyPA AI Hub
+      <br>
+      <small>Text، Voice، Live Call اور Files</small>
+    </div>
+  </main>
+
+
+  <!-- =========================
+       BOTTOM COMPOSER
+       ========================= -->
+  <div class="bottom" id="bottomBar">
+
+    <div class="composer" id="composer">
+
+      <!-- Plus / Attachments -->
+      <button
+        class="plus"
+        id="plusButton"
+        type="button"
+        aria-label="Attachments"
+        aria-controls="attachmentMenu"
+        aria-expanded="false"
+      >
+        +
+      </button>
+
+
+      <!-- =========================
+           ATTACHMENT MENU
+           ========================= -->
+      <div
+        class="attach"
+        id="attachmentMenu"
+        aria-hidden="true"
+      >
+
+        <!-- Camera -->
+        <label class="aitem">
+          <span class="aicon">
+            <svg
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </span>
+
+          <span>Camera</span>
+
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            id="cameraInput"
+          >
+        </label>
+
+
+        <!-- Photos -->
+        <label class="aitem">
+          <span class="aicon">
+            <svg
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </span>
+
+          <span>Photos</span>
+
+          <input
+            type="file"
+            accept="image/*"
+            id="photoInput"
+          >
+        </label>
+
+
+        <!-- Files -->
+        <label class="aitem">
+          <span class="aicon">
+            <svg
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </span>
+
+          <span>Files</span>
+
+          <input
+            type="file"
+            id="fileInput"
+          >
+        </label>
+
+
+        <!-- Scan Document -->
+        <button
+          class="aitem"
+          type="button"
+          data-action="scan-document"
+        >
+          <span class="aicon">
+            <svg
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </span>
+
+          <span>Scan Document</span>
+        </button>
+
+
+        <!-- Tools -->
+        <button
+          class="aitem"
+          type="button"
+          data-action="tools"
+        >
+          <span class="aicon">
+            <svg
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </span>
+
+          <span>Tools</span>
+        </button>
+
+
+        <!-- Deep Research -->
+        <button
+          class="aitem"
+          type="button"
+          data-action="deep-research"
+        >
+          <span class="aicon">
+            <svg
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <line x1="11" y1="8" x2="11" y2="14"/>
+              <line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </span>
+
+          <span>Deep Research</span>
+        </button>
+
+      </div>
+
+
+      <!-- Cancel Voice / Live -->
+      <button
+        class="cancel"
+        id="cancelButton"
+        type="button"
+        aria-label="Cancel"
+      >
+        ×
+      </button>
+
+
+      <!-- Message Input -->
+      <input
+        id="messageInput"
+        class="text"
+        type="text"
+        placeholder="Ask MyPA AI Hub"
+        autocomplete="off"
+        aria-label="Message"
+      >
+
+
+      <!-- Voice Wave -->
+      <div
+        id="wave"
+        class="wave"
+        aria-hidden="true"
+      ></div>
+
+
+      <!-- Microphone -->
+      <button
+        class="mic"
+        id="micButton"
+        type="button"
+        aria-label="Voice"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+
+
+      <!-- Live Call -->
+      <button
+        class="live"
+        id="liveButton"
+        type="button"
+        aria-label="Live Call"
+        aria-pressed="false"
+      >
+        <span class="live-dot"></span>
+        <span>Live Call</span>
+      </button>
+
+
+      <!-- Send -->
+      <button
+        class="send"
+        id="sendButton"
+        type="button"
+        aria-label="Send"
+      >
+        ➤
+      </button>
+
+    </div>
+
+
+    <!-- Status -->
+    <div
+      id="status"
+      class="status"
+      aria-live="polite"
+    ></div>
+
+
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="toast"
+      role="alert"
+      aria-live="polite"
+    ></div>
+
+  </div>
+
+
+  <!-- =========================
+       MAIN 3-LINE SIDEBAR
+       ========================= -->
+  <div
+    class="backdrop"
+    id="menuBackdrop"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="menu"
+    id="mainMenu"
+    aria-label="Main Navigation"
+    aria-hidden="true"
+  >
+
+    <input
+      class="search"
+      id="menuSearch"
+      type="search"
+      placeholder="Search MyPA AI Hub"
+      autocomplete="off"
+      aria-label="Search Menu"
+    >
+
+    <h2>MyPA AI Hub</h2>
+
+
+    <button class="item" type="button" data-action="new-chat">
+      <span class="item-left">
+        <span class="item-icon">💬</span>
+        <span>New Chat</span>
+      </span>
+    </button>
+
+
+    <button class="item" type="button" data-action="chat-history">
+      <span class="item-left">
+        <span class="item-icon">📜</span>
+        <span>Chat History</span>
+      </span>
+    </button>
+
+
+    <button class="item" type="button" data-action="language">
+      <span class="item-left">
+        <span class="item-icon">🌐</span>
+        <span>Language</span>
+      </span>
+    </button>
+
+
+    <!-- Voice -->
+    <button
+      class="item"
+      id="voiceMenuItem"
+      type="button"
+      data-action="voice"
+      aria-expanded="false"
+    >
+      <span class="item-left">
+        <span class="item-icon">🎙️</span>
+        <span>Voice</span>
+      </span>
+
+      <span class="arrow" id="voiceArrow">▼</span>
+    </button>
+
+    <div
+      class="submenu"
+      id="voiceSubmenu"
+      aria-hidden="true"
+    >
+      <button class="subitem" type="button" data-action="voice-change">
+        Voice Change
+      </button>
+
+      <button class="subitem" type="button" data-action="voice-preview">
+        Voice Preview
+      </button>
+
+      <button class="subitem" type="button" data-action="voice-preferences">
+        Voice Preferences
+      </button>
+    </div>
+
+
+    <!-- AI Agents -->
+    <button class="item" type="button" data-action="ai-agents">
+      <span class="item-left">
+        <span class="item-icon">🤖</span>
+        <span>AI Agents</span>
+      </span>
+    </button>
+
+
+    <!-- My Tools -->
+    <button class="item" type="button" data-action="my-tools">
+      <span class="item-left">
+        <span class="item-icon">🛠️</span>
+        <span>My Tools / AI Tools</span>
+      </span>
+    </button>
+
+
+    <!-- Projects -->
+    <button class="item" type="button" data-action="projects">
+      <span class="item-left">
+        <span class="item-icon">📁</span>
+        <span>Projects</span>
+      </span>
+    </button>
+
+
+    <!-- Saved -->
+    <button class="item" type="button" data-action="saved">
+      <span class="item-left">
+        <span class="item-icon">⭐</span>
+        <span>Saved / Favorites</span>
+      </span>
+    </button>
+
+
+    <!-- Files -->
+    <button class="item" type="button" data-action="files-knowledge">
+      <span class="item-left">
+        <span class="item-icon">📚</span>
+        <span>Files &amp; Knowledge</span>
+      </span>
+    </button>
+
+
+    <!-- Tasks -->
+    <button class="item" type="button" data-action="tasks-workflows">
+      <span class="item-left">
+        <span class="item-icon">⚡</span>
+        <span>Tasks / Workflows</span>
+      </span>
+    </button>
+
+
+    <!-- Help -->
+    <button class="item" type="button" data-action="help">
+      <span class="item-left">
+        <span class="item-icon">❓</span>
+        <span>Help / Quick Guide</span>
+      </span>
+    </button>
+
+  </aside>
+
+
+  <!-- =========================
+       3-DOT MORE MENU
+       ========================= -->
+  <div
+    class="more-backdrop"
+    id="moreBackdrop"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="more-menu"
+    id="moreMenu"
+    aria-label="More Options"
+    aria-hidden="true"
+  >
+
+    <div class="more-menu-title">
+      MyPA AI Hub
+    </div>
+
+
+    <!-- Profile -->
+    <button
+      class="more-item"
+      type="button"
+      data-action="profile"
+    >
+      <span class="more-item-icon">👤</span>
+
+      <span class="more-item-content">
+        <strong>Profile</strong>
+        <small>Account &amp; personal information</small>
+      </span>
+    </button>
+
+
+    <!-- Privacy & Security -->
+    <button
+      class="more-item"
+      type="button"
+      data-action="privacy-security"
+    >
+      <span class="more-item-icon">🔐</span>
+
+      <span class="more-item-content">
+        <strong>Privacy &amp; Security</strong>
+        <small>Security, login, PIN &amp; biometric access</small>
+      </span>
+    </button>
+
+
+    <!-- Settings -->
+    <button
+      class="more-item"
+      type="button"
+      data-action="settings"
+    >
+      <span class="more-item-icon">⚙️</span>
+
+      <span class="more-item-content">
+        <strong>Settings</strong>
+        <small>App preferences &amp; controls</small>
+      </span>
+    </button>
+
+  </aside>
+
+
+  <!-- =========================
+       FUTURE MODAL / PAGE ROOT
+       ========================= -->
+  <div
+    id="pageLayer"
+    class="page-layer"
+    aria-hidden="true"
+  ></div>
+
+</div>
+
+
+<!-- Main JavaScript -->
+<script src="app.js" defer></script>
+
+</body>
+</html>
