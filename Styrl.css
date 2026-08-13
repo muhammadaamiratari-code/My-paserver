@@ -1,0 +1,967 @@
+/* =========================================================
+   MyPA AI Hub
+   style.css
+   UI / Layout / Responsive Design
+   ========================================================= */
+
+
+/* =========================================================
+   1. GLOBAL / BASE
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  color: #171717;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+label,
+.item,
+.subitem {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid #2f7df6;
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   2. MAIN APP
+   ========================================================= */
+
+.app {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   3. TOP BAR
+   ========================================================= */
+
+.top {
+  height: 58px;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding:
+    7px
+    12px
+    0;
+  flex-shrink: 0;
+  background: #ffffff;
+  position: relative;
+  z-index: 5;
+}
+
+.iconbtn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #222222;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.iconbtn:hover {
+  background: #f7f7f8;
+}
+
+.iconbtn:active {
+  background: #eeeeef;
+  transform: scale(0.96);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.brand small {
+  font-weight: 500;
+  color: #777777;
+}
+
+
+/* =========================================================
+   4. THREE-LINE MENU ICON
+   ========================================================= */
+
+.menu-lines {
+  width: 20px;
+  height: 14px;
+  position: relative;
+  display: block;
+}
+
+.menu-lines::before,
+.menu-lines::after,
+.menu-lines span {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #333333;
+}
+
+.menu-lines::before {
+  top: 0;
+  width: 20px;
+}
+
+.menu-lines span {
+  top: 6px;
+  width: 14px;
+}
+
+.menu-lines::after {
+  bottom: 0;
+  width: 9px;
+}
+
+
+/* =========================================================
+   5. CHAT AREA
+   ========================================================= */
+
+.chat {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding:
+    8px
+    15px
+    150px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}
+
+.empty {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #aaaaaa;
+  padding: 30px;
+}
+
+.msg {
+  max-width: min(88%, 760px);
+  margin: 9px 0;
+  padding: 11px 14px;
+  border-radius: 18px;
+  line-height: 1.45;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.user {
+  margin-left: auto;
+  background: #f1f1f1;
+}
+
+.ai-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(88%, 760px);
+}
+
+.ai {
+  margin-right: auto;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+}
+
+.speak-btn {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  padding: 0;
+  border: 1px solid #ececf0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #555555;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.speak-btn:hover {
+  background: #f7f7f8;
+}
+
+.speak-btn:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   6. BOTTOM AREA
+   ========================================================= */
+
+.bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  width: 100%;
+  background:
+    linear-gradient(
+      to top,
+      #ffffff 78%,
+      rgba(255, 255, 255, 0.92),
+      rgba(255, 255, 255, 0)
+    );
+  padding:
+    10px
+    12px
+    max(10px, env(safe-area-inset-bottom));
+  transition: bottom 0.08s linear;
+}
+
+.composer {
+  width: 100%;
+  max-width: 760px;
+  min-height: 58px;
+  margin: 0 auto;
+  padding: 6px;
+  border: 1px solid #e6e6eb;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 7px 28px rgba(30, 30, 45, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+
+/* =========================================================
+   7. COMPOSER BUTTONS
+   ========================================================= */
+
+.plus,
+.cancel,
+.mic,
+.send {
+  flex: 0 0 auto;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.plus {
+  width: 43px;
+  height: 43px;
+  padding: 0;
+  border-radius: 14px;
+  background: #fafafa;
+  color: #111111;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.plus:hover {
+  background: #f4f4f5;
+}
+
+.plus:active {
+  transform: scale(0.95);
+}
+
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  height: 43px;
+  padding: 8px 3px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #171717;
+  font-size: 16px;
+}
+
+.text::placeholder {
+  color: #9a9a9a;
+  opacity: 1;
+}
+
+.mic {
+  width: 41px;
+  height: 41px;
+  padding: 0;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111111;
+}
+
+.mic:hover {
+  background: #f7f7f8;
+}
+
+.mic:active {
+  transform: scale(0.95);
+}
+
+.mic svg {
+  width: 22px;
+  height: 22px;
+  stroke: #111111;
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.send {
+  width: 41px;
+  height: 41px;
+  padding: 0;
+  border-radius: 50%;
+  background: #2f7df6;
+  color: #ffffff;
+  font-size: 20px;
+  line-height: 1;
+  opacity: 0.35;
+  transition:
+    opacity 0.15s ease,
+    transform 0.1s ease;
+}
+
+.send.active {
+  opacity: 1;
+}
+
+.send:active {
+  transform: scale(0.94);
+}
+
+.cancel {
+  display: none;
+  width: 41px;
+  height: 41px;
+  padding: 0;
+  border-radius: 14px;
+  background: #f5f5f6;
+  color: #333333;
+  font-size: 25px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   8. LIVE CALL
+   ========================================================= */
+
+.live {
+  min-width: 90px;
+  height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: #e63946;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(230, 57, 70, 0.3);
+  transition:
+    transform 0.1s ease,
+    background-color 0.15s ease;
+}
+
+.live:hover {
+  background: #df3340;
+}
+
+.live:active {
+  transform: scale(0.95);
+  background: #d62828;
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+
+/* =========================================================
+   9. VOICE RECORDING WAVE
+   ========================================================= */
+
+.wave {
+  display: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 43px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.wave i {
+  width: 2.5px;
+  min-width: 2.5px;
+  height: 5px;
+  border-radius: 5px;
+  background:
+    linear-gradient(
+      to top,
+      #b9dcff,
+      #cbbdff,
+      #e9c8f3
+    );
+  opacity: 0.92;
+  transition: height 0.08s linear;
+}
+
+
+/* =========================================================
+   10. RECORDING STATE
+   ========================================================= */
+
+.recording .text {
+  display: none;
+}
+
+.recording .mic {
+  display: none;
+}
+
+.recording .cancel {
+  display: grid;
+}
+
+.recording .wave {
+  display: flex;
+}
+
+
+/* =========================================================
+   11. STATUS
+   ========================================================= */
+
+.status {
+  width: 100%;
+  height: 16px;
+  margin-top: 3px;
+  text-align: center;
+  font-size: 10px;
+  line-height: 16px;
+  color: #999999;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   12. TOAST / NOTIFICATION
+   ========================================================= */
+
+.toast {
+  position: fixed;
+  top: 68px;
+  left: 50%;
+  width: min(92vw, 420px);
+  padding: 12px 15px;
+  border: 1px solid #e7e7eb;
+  border-radius: 15px;
+  background: #ffffff;
+  color: #222222;
+  box-shadow: 0 10px 30px rgba(25, 25, 40, 0.14);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  z-index: 60;
+  opacity: 0;
+  transform: translate(-50%, -12px);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast.error {
+  border-color: #f0dede;
+}
+
+.toast.ok {
+  border-color: #dceee2;
+}
+
+
+/* =========================================================
+   13. ATTACHMENT PANEL
+   ========================================================= */
+
+.attach {
+  position: absolute;
+  left: 6px;
+  bottom: 64px;
+  width: min(320px, calc(100vw - 28px));
+  padding: 8px;
+  border: 1px solid #e9e9ee;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(25, 25, 40, 0.14);
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  transform: translateY(8px);
+  opacity: 0;
+  z-index: 20;
+  transition:
+    transform 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.attach.open {
+  display: grid;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.aitem {
+  min-height: 68px;
+  padding: 8px 5px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #333333;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.aitem:hover {
+  background: #f7f7f8;
+}
+
+.aitem:active {
+  background: #eeeeef;
+}
+
+.aicon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #f5f7fa;
+  color: #111111;
+  display: grid;
+  place-items: center;
+}
+
+.aicon svg {
+  width: 20px;
+  height: 20px;
+  stroke: #111111;
+  stroke-width: 1.8;
+  fill: none;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+
+/* =========================================================
+   14. SIDEBAR / THREE-LINE MENU
+   ========================================================= */
+
+.menu {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: min(320px, 86vw);
+  padding:
+    max(18px, env(safe-area-inset-top))
+    12px
+    max(18px, env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
+  transform: translateX(-105%);
+  transition: transform 0.22s ease;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  z-index: 30;
+}
+
+.menu.open {
+  transform: translateX(0);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0, 0, 0, 0.12);
+  z-index: 29;
+}
+
+.backdrop.show {
+  display: block;
+}
+
+
+/* =========================================================
+   15. SIDEBAR SEARCH
+   ========================================================= */
+
+.search {
+  width: 100%;
+  height: 42px;
+  margin-bottom: 12px;
+  padding: 0 13px;
+  border: 1px solid #ececf0;
+  border-radius: 14px;
+  outline: 0;
+  background: #ffffff;
+  color: #222222;
+}
+
+.search::placeholder {
+  color: #999999;
+}
+
+.search:focus {
+  border-color: #d5d5dc;
+}
+
+
+/* =========================================================
+   16. SIDEBAR TITLE
+   ========================================================= */
+
+.menu h2 {
+  margin:
+    10px
+    8px
+    15px;
+  color: #111111;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   17. SIDEBAR ITEMS
+   ========================================================= */
+
+.item {
+  min-height: 46px;
+  margin-bottom: 2px;
+  padding: 0 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #333333;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.item:hover {
+  background: #f7f7f8;
+}
+
+.item:active {
+  background: #eeeeef;
+}
+
+.item-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-icon {
+  width: 22px;
+  min-width: 22px;
+  text-align: center;
+  color: #555555;
+  font-size: 16px;
+}
+
+.arrow {
+  margin-left: 8px;
+  color: #888888;
+  font-size: 11px;
+  transition: transform 0.2s ease;
+}
+
+
+/* =========================================================
+   18. VOICE SUBMENU
+   ========================================================= */
+
+.submenu {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+  padding-left: 36px;
+}
+
+.submenu.open {
+  display: flex;
+}
+
+.submenu .subitem {
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  color: #555555;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.submenu .subitem:hover {
+  background: #f2f2f5;
+  color: #111111;
+}
+
+.submenu .subitem:active {
+  background: #eaeaec;
+}
+
+
+/* =========================================================
+   19. RESPONSIVE — SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .top {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .chat {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .composer {
+    border-radius: 21px;
+    gap: 4px;
+  }
+
+  .plus {
+    width: 40px;
+  }
+
+  .send {
+    width: 40px;
+  }
+
+  .mic {
+    width: 39px;
+  }
+
+  .live {
+    min-width: 82px;
+    padding-left: 9px;
+    padding-right: 9px;
+    font-size: 12px;
+  }
+
+  .live-dot {
+    width: 9px;
+    height: 9px;
+    flex-basis: 9px;
+  }
+
+  .attach {
+    width: min(310px, calc(100vw - 24px));
+  }
+}
+
+
+/* =========================================================
+   20. VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .top {
+    height: 54px;
+    min-height: 54px;
+  }
+
+  .iconbtn {
+    width: 39px;
+    height: 39px;
+  }
+
+  .brand {
+    font-size: 17px;
+  }
+
+  .live {
+    min-width: 72px;
+    padding-left: 7px;
+    padding-right: 7px;
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .composer {
+    min-height: 54px;
+    padding: 5px;
+  }
+
+  .plus,
+  .mic,
+  .send,
+  .cancel {
+    width: 38px;
+    height: 38px;
+  }
+
+  .text {
+    font-size: 15px;
+  }
+}
+
+
+/* =========================================================
+   21. LANDSCAPE MOBILE
+   ========================================================= */
+
+@media (orientation: landscape) and (max-height: 500px) {
+
+  .top {
+    height: 50px;
+    min-height: 50px;
+    padding-top: 4px;
+  }
+
+  .iconbtn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .chat {
+    padding-bottom: 125px;
+  }
+
+  .bottom {
+    padding-top: 6px;
+  }
+
+  .composer {
+    min-height: 50px;
+  }
+
+  .plus,
+  .mic,
+  .send,
+  .cancel,
+  .live {
+    height: 38px;
+  }
+
+  .status {
+    height: 13px;
+    line-height: 13px;
+  }
+}
+
+
+/* =========================================================
+   22. REDUCED MOTION / ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  }
