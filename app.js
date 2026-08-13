@@ -17,9 +17,28 @@ const composer = document.getElementById("composer");
 const wave = document.getElementById("wave");
 const statusEl = document.getElementById("status");
 const sendBtn = document.getElementById("sendButton");
-const attachEl = document.getElementById("attach");
+const attachEl = document.getElementById("attachmentMenu");
 const bottomBar = document.getElementById("bottomBar");
 const toastEl = document.getElementById("toast");
+
+const plusButton = document.getElementById("plusButton");
+const micButton = document.getElementById("micButton");
+const liveButton = document.getElementById("liveButton");
+const cancelButton = document.getElementById("cancelButton");
+const newChatButton = document.getElementById("newChatButton");
+
+const menuButton = document.getElementById("menuButton");
+const mainMenu = document.getElementById("mainMenu");
+const menuBackdrop = document.getElementById("menuBackdrop");
+const menuSearch = document.getElementById("menuSearch");
+
+const moreButton = document.getElementById("moreButton");
+const moreMenu = document.getElementById("moreMenu");
+const moreBackdrop = document.getElementById("moreBackdrop");
+
+const voiceMenuItem = document.getElementById("voiceMenuItem");
+const voiceSubmenu = document.getElementById("voiceSubmenu");
+const voiceArrow = document.getElementById("voiceArrow");
 
 
 /* =========================================================
@@ -38,35 +57,32 @@ let live = false;
 let animFrame = null;
 let audioContext = null;
 let analyser = null;
+let audioSource = null;
 
 let toastTimer = null;
-
 let recognitionRestartTimer = null;
 
 
 /* =========================================================
-   STATUS
+   STATUS / TOAST
    ========================================================= */
 
 function status(text) {
 
     if (!statusEl) return;
 
-    statusEl.textContent = text;
+    statusEl.textContent = text || "";
 }
 
-
-/* =========================================================
-   TOAST
-   ========================================================= */
 
 function showToast(text, type = "error") {
 
     if (!toastEl) return;
 
-    toastEl.textContent = text;
+    toastEl.textContent = text || "";
 
-    toastEl.className = "toast show " + type;
+    toastEl.className =
+        "toast show " + type;
 
     clearTimeout(toastTimer);
 
@@ -91,12 +107,14 @@ function addMessage(text, sender = "assistant") {
 
     if (sender === "assistant") {
 
-        const row = document.createElement("div");
+        const row =
+            document.createElement("div");
 
         row.className = "ai-wrap";
 
 
-        const message = document.createElement("div");
+        const message =
+            document.createElement("div");
 
         message.className = "msg ai";
 
@@ -107,6 +125,8 @@ function addMessage(text, sender = "assistant") {
             document.createElement("button");
 
         speakButton.className = "speak-btn";
+
+        speakButton.type = "button";
 
         speakButton.textContent = "🔊";
 
@@ -144,7 +164,8 @@ function addMessage(text, sender = "assistant") {
     }
 
 
-    chat.scrollTop = chat.scrollHeight;
+    chat.scrollTop =
+        chat.scrollHeight;
 }
 
 
@@ -211,38 +232,26 @@ function updateSend() {
         "active",
         hasText || listening
     );
+
+
+    if (micButton) {
+
+        micButton.setAttribute(
+            "aria-pressed",
+            String(listening)
+        );
+    }
+
+
+    if (liveButton) {
+
+        liveButton.setAttribute(
+            "aria-pressed",
+            String(live)
+        );
+    }
 }
 
-
-if (input) {
-
-    input.addEventListener(
-        "input",
-        updateSend
-    );
-
-
-    input.addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                event.key === "Enter" &&
-                !event.shiftKey
-            ) {
-
-                event.preventDefault();
-
-                sendCurrent();
-            }
-        }
-    );
-}
-
-
-/* =========================================================
-   SEND CURRENT MESSAGE
-   ========================================================= */
 
 function sendCurrent() {
 
@@ -289,11 +298,39 @@ function sendCurrent() {
 }
 
 
+if (input) {
+
+    input.addEventListener(
+        "input",
+        updateSend
+    );
+
+
+    input.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                sendCurrent();
+            }
+        }
+    );
+}
+
+
 /* =========================================================
    CURRENT TEST PROCESSOR
    =========================================================
-   Future:
-   یہاں server.py / AI API connection آئے گا۔
+   IMPORTANT:
+   This is still a frontend test processor.
+   It is NOT an AI/server connection yet.
+   Future server.py / AI API connection belongs here.
    ========================================================= */
 
 function processMessage(text) {
@@ -316,104 +353,232 @@ function processMessage(text) {
    ATTACHMENT MENU
    ========================================================= */
 
+function setAttachState(open) {
+
+    if (!attachEl || !plusButton) return;
+
+
+    attachEl.classList.toggle(
+        "open",
+        open
+    );
+
+
+    attachEl.setAttribute(
+        "aria-hidden",
+        String(!open)
+    );
+
+
+    plusButton.setAttribute(
+        "aria-expanded",
+        String(open)
+    );
+}
+
+
 function toggleAttach() {
 
     if (!attachEl) return;
 
 
-    if (
-        attachEl.classList.contains("open")
-    ) {
-
-        closeAttachMenu();
-
-
-        if (
-            history.state &&
-            history.state.mypaAttachMenu
-        ) {
-
-            try {
-
-                history.back();
-
-            } catch (error) {}
-        }
-
-
-    } else {
-
-        openAttachMenu();
-    }
+    setAttachState(
+        !attachEl.classList.contains("open")
+    );
 }
 
 
 function openAttachMenu() {
 
-    if (!attachEl) return;
-
-
-    attachEl.classList.add("open");
-
-
-    try {
-
-        history.pushState(
-            { mypaAttachMenu: true },
-            "",
-            window.location.href
-        );
-
-    } catch (error) {}
+    setAttachState(true);
 }
 
 
 function closeAttachMenu() {
 
-    if (!attachEl) return;
+    setAttachState(false);
+}
 
-    attachEl.classList.remove("open");
+
+if (plusButton) {
+
+    plusButton.addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            toggleAttach();
+        }
+    );
 }
 
 
 /* =========================================================
-   BROWSER BACK BUTTON
+   MAIN 3-LINE MENU
    ========================================================= */
 
-window.addEventListener(
-    "popstate",
-    () => {
+function setMainMenuState(open) {
 
-        if (
-            attachEl &&
-            attachEl.classList.contains("open")
-        ) {
-
-            closeAttachMenu();
-        }
-    }
-);
+    if (
+        !mainMenu ||
+        !menuBackdrop ||
+        !menuButton
+    ) return;
 
 
-/* =========================================================
-   THREE-LINE MAIN MENU
-   ========================================================= */
+    mainMenu.classList.toggle(
+        "open",
+        open
+    );
+
+
+    menuBackdrop.classList.toggle(
+        "show",
+        open
+    );
+
+
+    mainMenu.setAttribute(
+        "aria-hidden",
+        String(!open)
+    );
+
+
+    menuBackdrop.setAttribute(
+        "aria-hidden",
+        String(!open)
+    );
+
+
+    menuButton.setAttribute(
+        "aria-expanded",
+        String(open)
+    );
+}
+
 
 function toggleMenu() {
 
-    const menu =
-        document.getElementById("menu");
-
-    const backdrop =
-        document.getElementById("backdrop");
+    if (!mainMenu) return;
 
 
-    if (!menu || !backdrop) return;
+    setMainMenuState(
+        !mainMenu.classList.contains("open")
+    );
+}
 
 
-    menu.classList.toggle("open");
+function closeMenu() {
 
-    backdrop.classList.toggle("show");
+    setMainMenuState(false);
+}
+
+
+if (menuButton) {
+
+    menuButton.addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            toggleMenu();
+        }
+    );
+}
+
+
+if (menuBackdrop) {
+
+    menuBackdrop.addEventListener(
+        "click",
+        closeMenu
+    );
+}
+
+
+/* =========================================================
+   MORE / 3-DOT MENU
+   ========================================================= */
+
+function setMoreMenuState(open) {
+
+    if (
+        !moreMenu ||
+        !moreBackdrop ||
+        !moreButton
+    ) return;
+
+
+    moreMenu.classList.toggle(
+        "open",
+        open
+    );
+
+
+    moreBackdrop.classList.toggle(
+        "show",
+        open
+    );
+
+
+    moreMenu.setAttribute(
+        "aria-hidden",
+        String(!open)
+    );
+
+
+    moreBackdrop.setAttribute(
+        "aria-hidden",
+        String(!open)
+    );
+
+
+    moreButton.setAttribute(
+        "aria-expanded",
+        String(open)
+    );
+}
+
+
+function toggleMoreMenu() {
+
+    if (!moreMenu) return;
+
+
+    setMoreMenuState(
+        !moreMenu.classList.contains("open")
+    );
+}
+
+
+function closeMoreMenu() {
+
+    setMoreMenuState(false);
+}
+
+
+if (moreButton) {
+
+    moreButton.addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            toggleMoreMenu();
+        }
+    );
+}
+
+
+if (moreBackdrop) {
+
+    moreBackdrop.addEventListener(
+        "click",
+        closeMoreMenu
+    );
 }
 
 
@@ -427,36 +592,70 @@ function newChat() {
 }
 
 
+if (newChatButton) {
+
+    newChatButton.addEventListener(
+        "click",
+        newChat
+    );
+}
+
+
 /* =========================================================
    VOICE SUBMENU
    ========================================================= */
 
 function toggleVoiceSubmenu() {
 
-    const submenu =
-        document.getElementById(
-            "voiceSubmenu"
+    if (!voiceSubmenu) return;
+
+
+    const open =
+        !voiceSubmenu.classList.contains("open");
+
+
+    voiceSubmenu.classList.toggle(
+        "open",
+        open
+    );
+
+
+    voiceSubmenu.setAttribute(
+        "aria-hidden",
+        String(!open)
+    );
+
+
+    if (voiceMenuItem) {
+
+        voiceMenuItem.setAttribute(
+            "aria-expanded",
+            String(open)
         );
-
-    const arrow =
-        document.getElementById(
-            "voiceArrow"
-        );
+    }
 
 
-    if (!submenu) return;
+    if (voiceArrow) {
 
-
-    submenu.classList.toggle("open");
-
-
-    if (arrow) {
-
-        arrow.style.transform =
-            submenu.classList.contains("open")
+        voiceArrow.style.transform =
+            open
                 ? "rotate(180deg)"
                 : "rotate(0deg)";
     }
+}
+
+
+if (voiceMenuItem) {
+
+    voiceMenuItem.addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            toggleVoiceSubmenu();
+        }
+    );
 }
 
 
@@ -498,12 +697,12 @@ function startWave() {
 
     try {
 
-        const AudioContext =
+        const AudioContextClass =
             window.AudioContext ||
             window.webkitAudioContext;
 
 
-        if (!AudioContext) {
+        if (!AudioContextClass) {
 
             throw new Error(
                 "AudioContext unavailable"
@@ -512,7 +711,7 @@ function startWave() {
 
 
         audioContext =
-            new AudioContext();
+            new AudioContextClass();
 
 
         analyser =
@@ -522,13 +721,15 @@ function startWave() {
         analyser.fftSize = 64;
 
 
-        const source =
+        audioSource =
             audioContext.createMediaStreamSource(
                 mediaStream
             );
 
 
-        source.connect(analyser);
+        audioSource.connect(
+            analyser
+        );
 
 
         const data =
@@ -604,6 +805,18 @@ function stopWave() {
     }
 
 
+    if (audioSource) {
+
+        try {
+
+            audioSource.disconnect();
+
+        } catch (error) {}
+
+        audioSource = null;
+    }
+
+
     if (audioContext) {
 
         try {
@@ -611,7 +824,6 @@ function stopWave() {
             audioContext.close();
 
         } catch (error) {}
-
 
         audioContext = null;
     }
@@ -831,6 +1043,25 @@ async function startVoice() {
 }
 
 
+if (micButton) {
+
+    micButton.addEventListener(
+        "click",
+        () => {
+
+            if (listening) {
+
+                sendVoice();
+
+            } else {
+
+                startVoice();
+            }
+        }
+    );
+}
+
+
 /* =========================================================
    SPEECH RECOGNITION
    ========================================================= */
@@ -966,8 +1197,8 @@ function startRecognition(isLive) {
 
         recognition = null;
 
-        status(
-            "Speech recognition شروع نہیں ہو سکی۔"
+        status( 
+           "Speech recognition شروع نہیں ہو سکی۔"
         );
     }
 }
@@ -987,25 +1218,26 @@ function scheduleRecognitionRestart() {
     recognitionRestartTimer =
         setTimeout(() => {
 
-            if (
-                live &&
-                !recognition
-            ) {
+            if (!live) return;
+
+
+            if (!recognition) {
 
                 startRecognition(true);
 
-            } else if (live) {
+                return;
+            }
 
-                try {
 
-                    recognition.start();
+            try {
 
-                } catch (error) {
+                recognition.start();
 
-                    recognition = null;
+            } catch (error) {
 
-                    startRecognition(true);
-                }
+                recognition = null;
+
+                startRecognition(true);
             }
 
         }, 250);
@@ -1079,9 +1311,12 @@ function sendVoice() {
 
 
             /*
-             * مستقبل میں:
-             * یہی blob server.py/API کو
+             * Future:
+             * یہی blob server.py / AI API کو
              * بھیجا جائے گا۔
+             *
+             * ابھی اصل audio upload
+             * intentionally نہیں کیا گیا۔
              */
 
 
@@ -1091,7 +1326,6 @@ function sendVoice() {
                     "Voice recording تیار ہے۔",
                     "user"
                 );
-
             }
 
 
@@ -1124,6 +1358,9 @@ function sendVoice() {
                     transcript
                 );
             }
+
+
+            cleanupMedia();
         };
 
 
@@ -1158,9 +1395,7 @@ function cleanupMedia() {
 
     mediaStream = null;
 
-
     mediaRecorder = null;
-
 
     stopWave();
 }
@@ -1181,7 +1416,8 @@ function stopRecording(cancel = false) {
 
     if (
         recorder &&
-        recorder.state !== "inactive"
+        recorder.state !==
+        "inactive"
     ) {
 
         try {
@@ -1190,9 +1426,6 @@ function stopRecording(cancel = false) {
 
         } catch (error) {}
     }
-
-
-    cleanupMedia();
 
 
     listening = false;
@@ -1223,6 +1456,22 @@ function stopRecording(cancel = false) {
         status(
             "Voice cancelled"
         );
+
+
+        cleanupMedia();
+
+
+        return;
+    }
+
+
+    if (
+        !recorder ||
+        recorder.state ===
+        "inactive"
+    ) {
+
+        cleanupMedia();
     }
 }
 
@@ -1245,6 +1494,15 @@ function cancelCurrent() {
 
         stopRecording(true);
     }
+}
+
+
+if (cancelButton) {
+
+    cancelButton.addEventListener(
+        "click",
+        cancelCurrent
+    );
 }
 
 
@@ -1340,6 +1598,9 @@ async function toggleLive() {
         startRecognition(true);
 
 
+        updateSend();
+
+
     } catch (error) {
 
         cleanupMedia();
@@ -1404,6 +1665,15 @@ function stopLive() {
 }
 
 
+if (liveButton) {
+
+    liveButton.addEventListener(
+        "click",
+        toggleLive
+    );
+}
+
+
 /* =========================================================
    FILE / IMAGE SELECTION
    ========================================================= */
@@ -1447,12 +1717,351 @@ async function uploadFile(file) {
      * Future:
      *
      * یہاں FormData کے ذریعے file
-     * server.py کو بھیجی جائے گی۔
+     * server.py / AI API کو بھیجی جائے گی۔
      *
      * ابھی اصل upload intentionally
      * نہیں کیا گیا۔
      */
 }
+
+
+/* =========================================================
+   FILE INPUTS
+   ========================================================= */
+
+const cameraInput =
+    document.getElementById("cameraInput");
+
+const photoInput =
+    document.getElementById("photoInput");
+
+const fileInput =
+    document.getElementById("fileInput");
+
+
+function bindFileInput(element) {
+
+    if (!element) return;
+
+
+    element.addEventListener(
+        "change",
+        event => {
+
+            const file =
+                event.target.files?.[0];
+
+
+            if (file) {
+
+                uploadFile(file);
+            }
+
+
+            event.target.value = "";
+        }
+    );
+}
+
+
+bindFileInput(cameraInput);
+
+bindFileInput(photoInput);
+
+bindFileInput(fileInput);
+
+
+/* =========================================================
+   ATTACHMENT ACTIONS
+   ========================================================= */
+
+document.querySelectorAll(
+    "#attachmentMenu [data-action]"
+).forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            const action =
+                button.dataset.action;
+
+
+            closeAttachMenu();
+
+
+            if (
+                action ===
+                "scan-document"
+            ) {
+
+                status(
+                    "Scan Document ابھی frontend placeholder ہے۔"
+                );
+
+
+            } else if (
+                action ===
+                "tools"
+            ) {
+
+                status(
+                    "Tools menu ابھی frontend placeholder ہے۔"
+                );
+
+
+            } else if (
+                action ===
+                "deep-research"
+            ) {
+
+                status(
+                    "Deep Research ابھی frontend placeholder ہے۔"
+                );
+            }
+        }
+    );
+});
+
+
+/* =========================================================
+   MAIN MENU ACTIONS
+   ========================================================= */
+
+function handleAction(action) {
+
+    if (!action) return;
+
+
+    switch (action) {
+
+        case "new-chat":
+
+            newChat();
+
+            break;
+
+
+        case "voice":
+
+            toggleVoiceSubmenu();
+
+            break;
+
+
+        case "help":
+
+            status(
+                "Help / Quick Guide ابھی frontend placeholder ہے۔"
+            );
+
+            break;
+
+
+        default:
+
+            status(
+                action
+                    .replaceAll("-", " ") +
+                " ابھی frontend placeholder ہے۔"
+            );
+
+            break;
+    }
+}
+
+
+document.querySelectorAll(
+    '#mainMenu [data-action]'
+).forEach(button => {
+
+    button.addEventListener(
+        "click",
+        event => {
+
+            const action =
+                button.dataset.action;
+
+
+            if (
+                action ===
+                "voice"
+            ) {
+
+                return;
+            }
+
+
+            handleAction(action);
+        }
+    );
+});
+
+
+document.querySelectorAll(
+    '#mainMenu .subitem[data-action]'
+).forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            handleAction(
+                button.dataset.action
+            );
+
+            closeMenu();
+        }
+    );
+});
+
+
+/* =========================================================
+   MORE MENU ACTIONS
+   ========================================================= */
+
+document.querySelectorAll(
+    '#moreMenu [data-action]'
+).forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            handleAction(
+                button.dataset.action
+            );
+
+            closeMoreMenu();
+        }
+    );
+});
+
+
+/*
+=========================================================
+   MORE MENU ACTIONS
+   ========================================================= */
+
+document.querySelectorAll(
+    '#moreMenu [data-action]'
+).forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            handleAction(
+                button.dataset.action
+            );
+
+            closeMoreMenu();
+        }
+    );
+});
+
+
+/* =========================================================
+   MENU SEARCH
+   ========================================================= */
+
+if (menuSearch) {
+
+    menuSearch.addEventListener(
+        "input",
+        () => {
+
+            const query =
+                menuSearch.value
+                    .trim()
+                    .toLowerCase();
+
+
+            mainMenu
+                ?.querySelectorAll(
+                    ".item, .subitem"
+                )
+                .forEach(item => {
+
+                    const text =
+                        item.textContent
+                            .toLowerCase();
+
+
+                    item.hidden =
+                        Boolean(query) &&
+                        !text.includes(query);
+                });
+        }
+    );
+}
+
+
+/* =========================================================
+   OUTSIDE CLICK
+   ========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const target =
+            event.target;
+
+
+        if (
+            attachEl &&
+            attachEl.classList.contains("open") &&
+            !attachEl.contains(target) &&
+            !plusButton?.contains(target)
+        ) {
+
+            closeAttachMenu();
+        }
+
+
+        if (
+            mainMenu &&
+            mainMenu.classList.contains("open") &&
+            !mainMenu.contains(target) &&
+            !menuButton?.contains(target)
+        ) {
+
+            closeMenu();
+        }
+
+
+        if (
+            moreMenu &&
+            moreMenu.classList.contains("open") &&
+            !moreMenu.contains(target) &&
+            !moreButton?.contains(target)
+        ) {
+
+            closeMoreMenu();
+        }
+    }
+);
+
+
+/* =========================================================
+   ESCAPE KEY
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key !== "Escape") return;
+
+
+        closeAttachMenu();
+
+        closeMenu();
+
+        closeMoreMenu();
+    }
+);
 
 
 /* =========================================================
@@ -1496,17 +2105,11 @@ if (window.visualViewport) {
         "scroll",
         syncKeyboard
     );
-
-
-    syncKeyboard();
 }
 
 
 /* =========================================================
    PAGE VISIBILITY
-   =========================================================
-   اگر user app/browser سے باہر جائے تو
-   microphone غیر ضروری طور پر چلتا نہ رہے۔
    ========================================================= */
 
 document.addEventListener(
@@ -1519,6 +2122,15 @@ document.addEventListener(
         ) {
 
             stopRecording(true);
+        }
+
+
+        if (
+            document.hidden &&
+            live
+        ) {
+
+            stopLive();
         }
     }
 );
@@ -1536,6 +2148,7 @@ window.addEventListener(
 
         cleanupMedia();
 
+
         try {
 
             window.speechSynthesis?.cancel();
@@ -1547,7 +2160,27 @@ window.addEventListener(
 
 /* =========================================================
    INITIAL UI STATE
-========================================================= */
+   ========================================================= */
+
+setAttachState(false);
+
+setMainMenuState(false);
+
+setMoreMenuState(false);
+
+
+if (voiceSubmenu) {
+
+    voiceSubmenu.classList.remove(
+        "open"
+    );
+
+    voiceSubmenu.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+}
+
 
 updateSend();
 
