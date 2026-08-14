@@ -1,967 +1,1739 @@
-/* =========================================================
-   MyPA AI Hub
-   style.css
-   UI / Layout / Responsive Design
-   ========================================================= */
+/* ==========================================================================
+   My AI Hub - Complete Master CSS
+   Connected with:
+   index.html
+   script.js
+   server.py
+
+   Theme:
+   - Clean White UI
+   - Login / Registration
+   - Emergency Command
+   - Main Chat
+   - Smart Plus / Cancel
+   - Voice / Live Call
+   - Attachments
+   - Settings / Security
+   - 3D Hub Review
+   - Mobile Responsive
+   ========================================================================== */
 
 
-/* =========================================================
-   1. GLOBAL / BASE
-   ========================================================= */
+/* ==========================================================================
+   1. ROOT VARIABLES
+   ========================================================================== */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+:root {
+    --bg-color: #ffffff;
+    --surface: #ffffff;
+    --surface-soft: #f7f7f8;
+
+    --text-main: #111111;
+    --text-soft: #666666;
+    --text-muted: #888888;
+
+    --border-light: #eeeeee;
+    --border-medium: #dddddd;
+
+    --black: #111111;
+    --white: #ffffff;
+
+    --danger: #ff3b30;
+    --danger-dark: #d92d24;
+
+    --success: #00a86b;
+    --success-soft: #eafaf3;
+
+    --warning: #ff9800;
+    --warning-soft: #fff5e6;
+
+    --shadow-small:
+        0 2px 10px rgba(0, 0, 0, 0.06);
+
+    --shadow-medium:
+        0 8px 30px rgba(0, 0, 0, 0.12);
+
+    --radius-small: 8px;
+    --radius-medium: 14px;
+    --radius-large: 20px;
+    --radius-round: 999px;
 }
+
+
+/* ==========================================================================
+   2. GLOBAL RESET
+   ========================================================================== */
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 
 html,
 body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  background: #ffffff;
-  color: #171717;
-  font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    min-height: 100%;
+
+    background: var(--bg-color);
+    color: var(--text-main);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    direction: rtl;
 }
 
+
 body {
-  overflow: hidden;
-  -webkit-text-size-adjust: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
+
 
 button,
 input,
 textarea,
 select {
-  font: inherit;
+    font: inherit;
 }
+
 
 button {
-  -webkit-tap-highlight-color: transparent;
-}
-
-button,
-label,
-.item,
-.subitem {
-  touch-action: manipulation;
-}
-
-:focus-visible {
-  outline: 2px solid #2f7df6;
-  outline-offset: 2px;
+    cursor: pointer;
 }
 
 
-/* =========================================================
-   2. MAIN APP
-   ========================================================= */
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+
+input:focus,
+button:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   3. GENERAL UTILITY CLASSES
+   ========================================================================== */
+
+.hidden {
+    display: none !important;
+}
+
+
+.visible {
+    display: block !important;
+}
+
+
+.no-scroll {
+    overflow: hidden !important;
+}
+
+
+/* ==========================================================================
+   4. AUTHENTICATION SCREEN
+   ========================================================================== */
+
+.auth-screen {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    overflow-y: auto;
+}
+
+
+.auth-card {
+    width: 100%;
+    max-width: 430px;
+
+    padding: 28px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-large);
+
+    box-shadow: var(--shadow-medium);
+
+    text-align: center;
+}
+
+
+.auth-card h1 {
+    margin: 0;
+
+    font-size: 30px;
+    font-weight: 800;
+
+    color: var(--text-main);
+
+    letter-spacing: 0.3px;
+}
+
+
+.auth-subtitle {
+    margin: 8px 0 25px;
+
+    color: var(--text-soft);
+
+    font-size: 14px;
+}
+
+
+/* ==========================================================================
+   5. AUTH MESSAGE
+   ========================================================================== */
+
+.auth-message {
+    display: none;
+
+    margin: 0 0 15px;
+
+    padding: 11px 13px;
+
+    border-radius: var(--radius-small);
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    text-align: right;
+}
+
+
+.auth-message.show {
+    display: block;
+}
+
+
+.auth-message.error {
+    background: #fff0ef;
+    color: #b42318;
+
+    border: 1px solid #ffd5d2;
+}
+
+
+.auth-message.success {
+    background: var(--success-soft);
+    color: #087443;
+
+    border: 1px solid #c9f1dd;
+}
+
+
+.auth-message.warning {
+    background: var(--warning-soft);
+    color: #9a5b00;
+
+    border: 1px solid #ffe0ae;
+}
+
+
+/* ==========================================================================
+   6. AUTH PANELS
+   ========================================================================== */
+
+.auth-panel {
+    width: 100%;
+
+    text-align: right;
+}
+
+
+.auth-panel h2 {
+    margin: 0 0 20px;
+
+    font-size: 21px;
+    font-weight: 700;
+
+    color: var(--text-main);
+
+    text-align: center;
+}
+
+
+.auth-panel label {
+    display: block;
+
+    margin: 13px 0 6px;
+
+    color: var(--text-main);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.auth-panel input {
+    width: 100%;
+
+    height: 46px;
+
+    padding: 0 13px;
+
+    background: #ffffff;
+
+    color: var(--text-main);
+
+    border: 1px solid var(--border-medium);
+
+    border-radius: 10px;
+
+    outline: none;
+
+    direction: ltr;
+
+    text-align: left;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.auth-panel input:focus {
+    border-color: #111111;
+
+    box-shadow:
+        0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+
+.auth-panel input::placeholder {
+    color: #999999;
+}
+
+
+/* ==========================================================================
+   7. AUTH BUTTONS
+   ========================================================================== */
+
+.primary-btn,
+.secondary-btn,
+.emergency-btn,
+.text-btn {
+    width: 100%;
+
+    min-height: 44px;
+
+    margin-top: 12px;
+
+    border-radius: 10px;
+
+    font-weight: 700;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease,
+        background 0.15s ease;
+}
+
+
+.primary-btn {
+    border: none;
+
+    background: #111111;
+    color: #ffffff;
+}
+
+
+.primary-btn:hover {
+    background: #000000;
+}
+
+
+.secondary-btn {
+    border: 1px solid var(--border-medium);
+
+    background: #ffffff;
+    color: #111111;
+}
+
+
+.secondary-btn:hover {
+    background: var(--surface-soft);
+}
+
+
+.emergency-btn {
+    border: none;
+
+    background: var(--danger);
+    color: #ffffff;
+}
+
+
+.emergency-btn:hover {
+    background: var(--danger-dark);
+}
+
+
+.text-btn {
+    border: none;
+
+    background: transparent;
+
+    color: #555555;
+
+    font-size: 13px;
+}
+
+
+.text-btn:hover {
+    color: #000000;
+
+    text-decoration: underline;
+}
+
+
+.primary-btn:active,
+.secondary-btn:active,
+.emergency-btn:active {
+    transform: scale(0.98);
+}
+
+
+/* ==========================================================================
+   8. EMERGENCY ENTRY
+   ========================================================================== */
+
+.emergency-entry {
+    margin-top: 22px;
+
+    padding-top: 18px;
+
+    border-top: 1px solid var(--border-light);
+}
+
+
+.emergency-entry .emergency-btn {
+    margin-top: 0;
+}
+
+
+.warning {
+    margin: 0 0 16px;
+
+    padding: 11px;
+
+    background: var(--warning-soft);
+
+    border: 1px solid #ffe0ae;
+    border-radius: 9px;
+
+    color: #8a5600;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+
+    text-align: right;
+}
+
+
+/* ==========================================================================
+   9. MAIN APP
+   ========================================================================== */
 
 .app {
-  width: 100%;
-  height: 100dvh;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  overflow: hidden;
+    display: flex;
+
+    flex-direction: column;
+
+    width: 100%;
+    height: 100vh;
+    min-height: 100vh;
+
+    background: #ffffff;
 }
 
 
-/* =========================================================
-   3. TOP BAR
-   ========================================================= */
-
-.top {
-  height: 58px;
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding:
-    7px
-    12px
-    0;
-  flex-shrink: 0;
-  background: #ffffff;
-  position: relative;
-  z-index: 5;
+.app.hidden {
+    display: none !important;
 }
+
+
+/* ==========================================================================
+   10. TOP HEADER
+   ========================================================================== */
+
+header.top {
+    position: relative;
+
+    z-index: 20;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 58px;
+
+    padding: 10px 16px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid var(--border-light);
+}
+
+
+.brand-title {
+    position: absolute;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    font-size: 16px;
+    font-weight: 800;
+
+    color: #111111;
+
+    white-space: nowrap;
+}
+
+
+.top-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
 
 .iconbtn {
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: 0;
-  border-radius: 13px;
-  background: #ffffff;
-  color: #222222;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: transparent;
+
+    border: none;
+
+    border-radius: 50%;
+
+    color: #111111;
+
+    font-size: 22px;
+
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
 }
+
 
 .iconbtn:hover {
-  background: #f7f7f8;
+    background: #f3f3f3;
 }
+
 
 .iconbtn:active {
-  background: #eeeeef;
-  transform: scale(0.96);
-}
-
-.brand {
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 1;
-  letter-spacing: -0.4px;
-  white-space: nowrap;
-}
-
-.brand small {
-  font-weight: 500;
-  color: #777777;
+    transform: scale(0.94);
 }
 
 
-/* =========================================================
-   4. THREE-LINE MENU ICON
-   ========================================================= */
+/* ==========================================================================
+   11. MAIN CHAT
+   ========================================================================== */
 
-.menu-lines {
-  width: 20px;
-  height: 14px;
-  position: relative;
-  display: block;
-}
+main.chat {
+    flex: 1;
 
-.menu-lines::before,
-.menu-lines::after,
-.menu-lines span {
-  content: "";
-  position: absolute;
-  left: 0;
-  height: 2px;
-  border-radius: 2px;
-  background: #333333;
-}
+    width: 100%;
 
-.menu-lines::before {
-  top: 0;
-  width: 20px;
-}
+    overflow-y: auto;
 
-.menu-lines span {
-  top: 6px;
-  width: 14px;
-}
+    padding: 18px 16px 25px;
 
-.menu-lines::after {
-  bottom: 0;
-  width: 9px;
+    background: #ffffff;
+
+    scroll-behavior: smooth;
+
+    -webkit-overflow-scrolling: touch;
 }
 
 
-/* =========================================================
-   5. CHAT AREA
-   ========================================================= */
-
-.chat {
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding:
-    8px
-    15px
-    150px;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  scroll-behavior: smooth;
-}
-
-.empty {
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  color: #aaaaaa;
-  padding: 30px;
-}
-
-.msg {
-  max-width: min(88%, 760px);
-  margin: 9px 0;
-  padding: 11px 14px;
-  border-radius: 18px;
-  line-height: 1.45;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-
-.user {
-  margin-left: auto;
-  background: #f1f1f1;
-}
-
-.ai-wrap {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  max-width: min(88%, 760px);
-}
-
-.ai {
-  margin-right: auto;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
-}
-
-.speak-btn {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  padding: 0;
-  border: 1px solid #ececf0;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #555555;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
-}
-
-.speak-btn:hover {
-  background: #f7f7f8;
-}
-
-.speak-btn:active {
-  transform: scale(0.94);
+main.chat::-webkit-scrollbar {
+    width: 5px;
 }
 
 
-/* =========================================================
-   6. BOTTOM AREA
-   ========================================================= */
+main.chat::-webkit-scrollbar-thumb {
+    background: #d6d6d6;
+
+    border-radius: 10px;
+}
+
+
+/* ==========================================================================
+   12. CHAT MESSAGES
+   ========================================================================== */
+
+.message {
+    max-width: 82%;
+
+    margin-bottom: 12px;
+
+    padding: 10px 14px;
+
+    border-radius: 16px;
+
+    font-size: 15px;
+
+    line-height: 1.55;
+
+    word-wrap: break-word;
+
+    overflow-wrap: anywhere;
+}
+
+
+.user-message {
+    margin-left: auto;
+
+    margin-right: 0;
+
+    background: #111111;
+
+    color: #ffffff;
+
+    border-bottom-right-radius: 4px;
+}
+
+
+.ai-message {
+    margin-right: auto;
+
+    margin-left: 0;
+
+    background: #f0f0f2;
+
+    color: #111111;
+
+    border-bottom-left-radius: 4px;
+}
+
+
+.system-message {
+    max-width: 90%;
+
+    margin: 10px auto;
+
+    padding: 8px 12px;
+
+    background: #f7f7f7;
+
+    color: #666666;
+
+    border-radius: 10px;
+
+    font-size: 12px;
+
+    text-align: center;
+}
+
+
+/* ==========================================================================
+   13. BOTTOM COMPOSER
+   ========================================================================== */
 
 .bottom {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  width: 100%;
-  background:
-    linear-gradient(
-      to top,
-      #ffffff 78%,
-      rgba(255, 255, 255, 0.92),
-      rgba(255, 255, 255, 0)
-    );
-  padding:
-    10px
-    12px
-    max(10px, env(safe-area-inset-bottom));
-  transition: bottom 0.08s linear;
+    position: relative;
+
+    z-index: 15;
+
+    width: 100%;
+
+    padding:
+        9px
+        16px
+        calc(9px + env(safe-area-inset-bottom));
+
+    background: #ffffff;
+
+    border-top: 1px solid var(--border-light);
 }
+
 
 .composer {
-  width: 100%;
-  max-width: 760px;
-  min-height: 58px;
-  margin: 0 auto;
-  padding: 6px;
-  border: 1px solid #e6e6eb;
-  border-radius: 24px;
-  background: #ffffff;
-  box-shadow: 0 7px 28px rgba(30, 30, 45, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  position: relative;
-}
+    display: flex;
 
+    align-items: center;
 
-/* =========================================================
-   7. COMPOSER BUTTONS
-   ========================================================= */
+    gap: 7px;
 
-.plus,
-.cancel,
-.mic,
-.send {
-  flex: 0 0 auto;
-  border: 0;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
+    width: 100%;
 
-.plus {
-  width: 43px;
-  height: 43px;
-  padding: 0;
-  border-radius: 14px;
-  background: #fafafa;
-  color: #111111;
-  font-size: 27px;
-  font-weight: 300;
-  line-height: 1;
-}
-
-.plus:hover {
-  background: #f4f4f5;
-}
-
-.plus:active {
-  transform: scale(0.95);
-}
-
-.text {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: 100%;
-  height: 43px;
-  padding: 8px 3px;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #171717;
-  font-size: 16px;
-}
-
-.text::placeholder {
-  color: #9a9a9a;
-  opacity: 1;
-}
-
-.mic {
-  width: 41px;
-  height: 41px;
-  padding: 0;
-  border-radius: 14px;
-  background: #ffffff;
-  color: #111111;
-}
-
-.mic:hover {
-  background: #f7f7f8;
-}
-
-.mic:active {
-  transform: scale(0.95);
-}
-
-.mic svg {
-  width: 22px;
-  height: 22px;
-  stroke: #111111;
-  stroke-width: 1.8;
-  fill: none;
-}
-
-.send {
-  width: 41px;
-  height: 41px;
-  padding: 0;
-  border-radius: 50%;
-  background: #2f7df6;
-  color: #ffffff;
-  font-size: 20px;
-  line-height: 1;
-  opacity: 0.35;
-  transition:
-    opacity 0.15s ease,
-    transform 0.1s ease;
-}
-
-.send.active {
-  opacity: 1;
-}
-
-.send:active {
-  transform: scale(0.94);
-}
-
-.cancel {
-  display: none;
-  width: 41px;
-  height: 41px;
-  padding: 0;
-  border-radius: 14px;
-  background: #f5f5f6;
-  color: #333333;
-  font-size: 25px;
-  line-height: 1;
-}
-
-
-/* =========================================================
-   8. LIVE CALL
-   ========================================================= */
-
-.live {
-  min-width: 90px;
-  height: 42px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 14px;
-  background: #e63946;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 3px 10px rgba(230, 57, 70, 0.3);
-  transition:
-    transform 0.1s ease,
-    background-color 0.15s ease;
-}
-
-.live:hover {
-  background: #df3340;
-}
-
-.live:active {
-  transform: scale(0.95);
-  background: #d62828;
-}
-
-.live-dot {
-  width: 10px;
-  height: 10px;
-  flex: 0 0 10px;
-  border-radius: 50%;
-  background: #ffffff;
-  display: inline-block;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-}
-
-
-/* =========================================================
-   9. VOICE RECORDING WAVE
-   ========================================================= */
-
-.wave {
-  display: none;
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 43px;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  overflow: hidden;
-}
-
-.wave i {
-  width: 2.5px;
-  min-width: 2.5px;
-  height: 5px;
-  border-radius: 5px;
-  background:
-    linear-gradient(
-      to top,
-      #b9dcff,
-      #cbbdff,
-      #e9c8f3
-    );
-  opacity: 0.92;
-  transition: height 0.08s linear;
-}
-
-
-/* =========================================================
-   10. RECORDING STATE
-   ========================================================= */
-
-.recording .text {
-  display: none;
-}
-
-.recording .mic {
-  display: none;
-}
-
-.recording .cancel {
-  display: grid;
-}
-
-.recording .wave {
-  display: flex;
-}
-
-
-/* =========================================================
-   11. STATUS
-   ========================================================= */
-
-.status {
-  width: 100%;
-  height: 16px;
-  margin-top: 3px;
-  text-align: center;
-  font-size: 10px;
-  line-height: 16px;
-  color: #999999;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-/* =========================================================
-   12. TOAST / NOTIFICATION
-   ========================================================= */
-
-.toast {
-  position: fixed;
-  top: 68px;
-  left: 50%;
-  width: min(92vw, 420px);
-  padding: 12px 15px;
-  border: 1px solid #e7e7eb;
-  border-radius: 15px;
-  background: #ffffff;
-  color: #222222;
-  box-shadow: 0 10px 30px rgba(25, 25, 40, 0.14);
-  font-size: 13px;
-  line-height: 1.45;
-  text-align: center;
-  z-index: 60;
-  opacity: 0;
-  transform: translate(-50%, -12px);
-  pointer-events: none;
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-.toast.error {
-  border-color: #f0dede;
-}
-
-.toast.ok {
-  border-color: #dceee2;
-}
-
-
-/* =========================================================
-   13. ATTACHMENT PANEL
-   ========================================================= */
-
-.attach {
-  position: absolute;
-  left: 6px;
-  bottom: 64px;
-  width: min(320px, calc(100vw - 28px));
-  padding: 8px;
-  border: 1px solid #e9e9ee;
-  border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 14px 34px rgba(25, 25, 40, 0.14);
-  display: none;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  transform: translateY(8px);
-  opacity: 0;
-  z-index: 20;
-  transition:
-    transform 0.16s ease,
-    opacity 0.16s ease;
-}
-
-.attach.open {
-  display: grid;
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.aitem {
-  min-height: 68px;
-  padding: 8px 5px;
-  border-radius: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  color: #333333;
-  font-size: 12px;
-  text-align: center;
-  cursor: pointer;
-  user-select: none;
-}
-
-.aitem:hover {
-  background: #f7f7f8;
-}
-
-.aitem:active {
-  background: #eeeeef;
-}
-
-.aicon {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: #f5f7fa;
-  color: #111111;
-  display: grid;
-  place-items: center;
-}
-
-.aicon svg {
-  width: 20px;
-  height: 20px;
-  stroke: #111111;
-  stroke-width: 1.8;
-  fill: none;
-}
-
-input[type="file"] {
-  display: none;
-}
-
-
-/* =========================================================
-   14. SIDEBAR / THREE-LINE MENU
-   ========================================================= */
-
-.menu {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: min(320px, 86vw);
-  padding:
-    max(18px, env(safe-area-inset-top))
-    12px
-    max(18px, env(safe-area-inset-bottom));
-  background: #ffffff;
-  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
-  transform: translateX(-105%);
-  transition: transform 0.22s ease;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  z-index: 30;
-}
-
-.menu.open {
-  transform: translateX(0);
-}
-
-.backdrop {
-  position: fixed;
-  inset: 0;
-  display: none;
-  background: rgba(0, 0, 0, 0.12);
-  z-index: 29;
-}
-
-.backdrop.show {
-  display: block;
-}
-
-
-/* =========================================================
-   15. SIDEBAR SEARCH
-   ========================================================= */
-
-.search {
-  width: 100%;
-  height: 42px;
-  margin-bottom: 12px;
-  padding: 0 13px;
-  border: 1px solid #ececf0;
-  border-radius: 14px;
-  outline: 0;
-  background: #ffffff;
-  color: #222222;
-}
-
-.search::placeholder {
-  color: #999999;
-}
-
-.search:focus {
-  border-color: #d5d5dc;
-}
-
-
-/* =========================================================
-   16. SIDEBAR TITLE
-   ========================================================= */
-
-.menu h2 {
-  margin:
-    10px
-    8px
-    15px;
-  color: #111111;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-
-/* =========================================================
-   17. SIDEBAR ITEMS
-   ========================================================= */
-
-.item {
-  min-height: 46px;
-  margin-bottom: 2px;
-  padding: 0 12px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #333333;
-  font-size: 14px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.item:hover {
-  background: #f7f7f8;
-}
-
-.item:active {
-  background: #eeeeef;
-}
-
-.item-left {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.item-icon {
-  width: 22px;
-  min-width: 22px;
-  text-align: center;
-  color: #555555;
-  font-size: 16px;
-}
-
-.arrow {
-  margin-left: 8px;
-  color: #888888;
-  font-size: 11px;
-  transition: transform 0.2s ease;
-}
-
-
-/* =========================================================
-   18. VOICE SUBMENU
-   ========================================================= */
-
-.submenu {
-  display: none;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 4px;
-  padding-left: 36px;
-}
-
-.submenu.open {
-  display: flex;
-}
-
-.submenu .subitem {
-  height: 40px;
-  padding: 0 10px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  color: #555555;
-  font-size: 13.5px;
-  cursor: pointer;
-}
-
-.submenu .subitem:hover {
-  background: #f2f2f5;
-  color: #111111;
-}
-
-.submenu .subitem:active {
-  background: #eaeaec;
-}
-
-
-/* =========================================================
-   19. RESPONSIVE — SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 420px) {
-
-  .brand {
-    font-size: 18px;
-  }
-
-  .top {
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-
-  .chat {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .composer {
-    border-radius: 21px;
-    gap: 4px;
-  }
-
-  .plus {
-    width: 40px;
-  }
-
-  .send {
-    width: 40px;
-  }
-
-  .mic {
-    width: 39px;
-  }
-
-  .live {
-    min-width: 82px;
-    padding-left: 9px;
-    padding-right: 9px;
-    font-size: 12px;
-  }
-
-  .live-dot {
-    width: 9px;
-    height: 9px;
-    flex-basis: 9px;
-  }
-
-  .attach {
-    width: min(310px, calc(100vw - 24px));
-  }
-}
-
-
-/* =========================================================
-   20. VERY SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 360px) {
-
-  .top {
-    height: 54px;
     min-height: 54px;
-  }
 
-  .iconbtn {
-    width: 39px;
-    height: 39px;
-  }
+    padding: 6px 9px;
 
-  .brand {
-    font-size: 17px;
-  }
+    background: var(--surface-soft);
 
-  .live {
-    min-width: 72px;
-    padding-left: 7px;
-    padding-right: 7px;
-    gap: 4px;
-    font-size: 11px;
-  }
+    border: 1px solid #dfdfdf;
 
-  .composer {
-    min-height: 54px;
-    padding: 5px;
-  }
+    border-radius: 28px;
+}
 
-  .plus,
-  .mic,
-  .send,
-  .cancel {
+
+/* ==========================================================================
+   14. PLUS / CANCEL BUTTON
+   ========================================================================== */
+
+.plus-cancel-btn {
+    flex: 0 0 auto;
+
     width: 38px;
     height: 38px;
-  }
 
-  .text {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: #eef0f2;
+
+    color: #111111;
+
+    border: none;
+
+    border-radius: 50%;
+
+    font-size: 22px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.plus-cancel-btn:hover {
+    background: #e2e4e7;
+}
+
+
+.plus-cancel-btn.cancel-mode {
+    background: var(--danger);
+
+    color: #ffffff;
+
+    transform: rotate(180deg);
+}
+
+
+/* ==========================================================================
+   15. TEXT INPUT
+   ========================================================================== */
+
+.text-input {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 40px;
+
+    padding: 7px 8px;
+
+    background: transparent;
+
+    color: #111111;
+
+    border: none;
+
+    outline: none;
+
     font-size: 15px;
-  }
+
+    direction: rtl;
 }
 
 
-/* =========================================================
-   21. LANDSCAPE MOBILE
-   ========================================================= */
-
-@media (orientation: landscape) and (max-height: 500px) {
-
-  .top {
-    height: 50px;
-    min-height: 50px;
-    padding-top: 4px;
-  }
-
-  .iconbtn {
-    width: 38px;
-    height: 38px;
-  }
-
-  .chat {
-    padding-bottom: 125px;
-  }
-
-  .bottom {
-    padding-top: 6px;
-  }
-
-  .composer {
-    min-height: 50px;
-  }
-
-  .plus,
-  .mic,
-  .send,
-  .cancel,
-  .live {
-    height: 38px;
-  }
-
-  .status {
-    height: 13px;
-    line-height: 13px;
-  }
+.text-input::placeholder {
+    color: #888888;
 }
 
 
-/* =========================================================
-   22. REDUCED MOTION / ACCESSIBILITY
-   ========================================================= */
+.text-input:focus {
+    outline: none;
+}
 
-@media (prefers-reduced-motion: reduce) {
 
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition: none !important;
-    animation: none !important;
-  }
-  }
+/* ==========================================================================
+   16. COMPOSER BUTTONS
+   ========================================================================== */
+
+.composer-btn {
+    flex: 0 0 auto;
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: transparent;
+
+    color: #111111;
+
+    border: none;
+
+    border-radius: 50%;
+
+    font-size: 18px;
+
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
+}
+
+
+.composer-btn:hover {
+    background: #e9e9e9;
+}
+
+
+.composer-btn:active {
+    transform: scale(0.92);
+}
+
+
+/* ==========================================================================
+   17. SEND BUTTON
+   ========================================================================== */
+
+.send-btn {
+    flex: 0 0 auto;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: #111111;
+
+    color: #ffffff;
+
+    border: none;
+
+    border-radius: 50%;
+
+    font-size: 17px;
+
+    transition:
+        transform 0.15s ease,
+        background 0.2s ease;
+}
+
+
+.send-btn:hover {
+    background: #000000;
+}
+
+
+.send-btn:active {
+    transform: scale(0.92);
+}
+
+
+/* ==========================================================================
+   18. VOICE WAVE VISUALIZER
+   ========================================================================== */
+
+.wave-visualizer {
+    display: none;
+
+    width: 100%;
+
+    height: 38px;
+
+    padding: 5px 25px;
+
+    background: #ffffff;
+
+    overflow: hidden;
+}
+
+
+.wave-visualizer.active {
+    display: block;
+}
+
+
+.wave-visualizer::before {
+    content: "";
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #111111 0,
+            #111111 2px,
+            transparent 2px,
+            transparent 8px
+        );
+
+    opacity: 0.35;
+
+    border-radius: 10px;
+
+    animation: waveMove 0.8s linear infinite;
+}
+
+
+@keyframes waveMove {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(8px);
+    }
+}
+
+
+/* ==========================================================================
+   19. ATTACHMENT MENU
+   ========================================================================== */
+
+.attachment-menu {
+    position: fixed;
+
+    left: 16px;
+    bottom: 78px;
+
+    z-index: 100;
+
+    display: none;
+
+    width: 180px;
+
+    padding: 8px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border-light);
+
+    border-radius: 14px;
+
+    box-shadow: var(--shadow-medium);
+}
+
+
+.attachment-menu.active {
+    display: block;
+}
+
+
+.attachment-menu button {
+    display: block;
+
+    width: 100%;
+
+    padding: 11px 12px;
+
+    background: transparent;
+
+    color: #111111;
+
+    border: none;
+
+    border-radius: 8px;
+
+    text-align: right;
+
+    font-size: 14px;
+}
+
+
+.attachment-menu button:hover {
+    background: #f5f5f5;
+}
+
+
+/* ==========================================================================
+   20. THREE DOT MENU
+   ========================================================================== */
+
+.more-menu {
+    position: fixed;
+
+    top: 58px;
+    left: 12px;
+
+    z-index: 300;
+
+    display: none;
+
+    width: 230px;
+
+    padding: 8px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border-light);
+
+    border-radius: 14px;
+
+    box-shadow: var(--shadow-medium);
+}
+
+
+.more-menu.open {
+    display: block;
+}
+
+
+.more-item {
+    display: block;
+
+    width: 100%;
+
+    padding: 12px 13px;
+
+    background: transparent;
+
+    color: #111111;
+
+    border: none;
+
+    border-radius: 8px;
+
+    text-align: right;
+
+    font-size: 14px;
+}
+
+
+.more-item:hover {
+    background: #f5f5f5;
+}
+
+
+.more-item[data-action="emergency"] {
+    color: var(--danger);
+}
+
+
+.more-item[data-action="logout"] {
+    color: #b42318;
+}
+
+
+/* ==========================================================================
+   21. MENU BACKDROP
+   ========================================================================== */
+
+.more-backdrop {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 250;
+
+    display: none;
+
+    background: rgba(0, 0, 0, 0.12);
+
+    backdrop-filter: blur(1px);
+}
+
+
+.more-backdrop.active {
+    display: block;
+}
+
+
+/* ==========================================================================
+   22. MODAL PAGE LAYER
+   ========================================================================== */
+
+.page-layer {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 500;
+
+    display: none;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, 0.28);
+
+    overflow-y: auto;
+}
+
+
+.page-layer.active {
+    display: block;
+}
+
+
+/* ==========================================================================
+   23. MODAL CONTENT
+   ========================================================================== */
+
+.modal-content {
+    width: 100%;
+
+    max-width: 650px;
+
+    margin: 30px auto;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    color: #111111;
+
+    border: 1px solid var(--border-light);
+
+    border-radius: 16px;
+
+    box-shadow: var(--shadow-medium);
+}
+
+
+.modal-content h3 {
+    margin-top: 0;
+
+    font-size: 20px;
+}
+
+
+.modal-content hr {
+    border: none;
+
+    border-top: 1px solid #eeeeee;
+}
+
+
+/* ==========================================================================
+   24. SETTINGS
+   ========================================================================== */
+
+.settings-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin: 15px 0;
+
+    padding: 5px 0;
+}
+
+
+.settings-row strong {
+    display: block;
+
+    color: #111111;
+
+    font-size: 14px;
+}
+
+
+.settings-row small {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #666666;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+.settings-row input[type="checkbox"] {
+    flex: 0 0 auto;
+
+    width: 20px;
+    height: 20px;
+}
+
+
+/* ==========================================================================
+   25. 3D HUB REVIEW
+   ========================================================================== */
+
+.canvas-3d-container {
+    position: relative;
+
+    width: 100%;
+
+    height: 280px;
+
+    background: #1a1a20;
+
+    border: 1px solid #2a2a35;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+
+.personal-assistant-room {
+    position: absolute;
+
+    top: 10px;
+    left: 10px;
+
+    width: 160px;
+    height: 130px;
+
+    padding: 7px;
+
+    background: rgba(0, 230, 118, 0.05);
+
+    border: 2px dashed #00a86b;
+
+    border-radius: 8px;
+}
+
+
+.assistant-avatar {
+    margin-top: 15px;
+
+    text-align: center;
+
+    transition:
+        transform 1.2s ease;
+}
+
+
+.assistant-avatar-circle {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto;
+
+    background: #00a86b;
+
+    color: #000000;
+
+    border-radius: 50%;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+.assistant-status {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #cccccc;
+
+    font-size: 10px;
+}
+
+
+.outer-hall {
+    position: absolute;
+
+    top: 10px;
+    right: 10px;
+    bottom: 10px;
+    left: 180px;
+
+    padding: 9px;
+
+    background: #22222d;
+
+    border-radius: 8px;
+}
+
+
+.library-shelf {
+    position: absolute;
+
+    top: 10px;
+    right: 10px;
+
+    width: 70px;
+    height: 100px;
+
+    padding: 5px;
+
+    background: #2c2c3e;
+
+    color: #ff9800;
+
+    border-left: 3px solid #ff9800;
+
+    border-radius: 4px;
+
+    font-size: 9px;
+}
+
+
+/* ==========================================================================
+   26. MODAL BUTTON ROW
+   ========================================================================== */
+
+.modal-button-row {
+    display: flex;
+
+    gap: 8px;
+
+    margin-top: 12px;
+}
+
+
+.modal-button-row button {
+    flex: 1;
+
+    min-height: 40px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    font-weight: 700;
+}
+
+
+.modal-close-btn {
+    width: 100%;
+
+    margin-top: 10px;
+
+    min-height: 38px;
+
+    background: #333333;
+
+    color: #ffffff;
+
+    border: none;
+
+    border-radius: 7px;
+}
+
+
+/* ==========================================================================
+   27. LOADING STATE
+   ========================================================================== */
+
+.loading {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+
+.loading-dot {
+    width: 6px;
+    height: 6px;
+
+    background: #777777;
+
+    border-radius: 50%;
+
+    animation: loadingPulse 1s infinite ease-in-out;
+}
+
+
+.loading-dot:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+
+.loading-dot:nth-child(3) {
+    animation-delay: 0.30s;
+}
+
+
+@keyframes loadingPulse {
+    0%,
+    80%,
+    100% {
+        transform: scale(0.7);
+
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: scale(1);
+
+        opacity: 1;
+    }
+}
+
+
+/* ==========================================================================
+   28. ERROR / SUCCESS STATES
+   ========================================================================== */
+
+.error-text {
+    color: #b42318;
+
+    font-size: 13px;
+}
+
+
+.success-text {
+    color: #087443;
+
+    font-size: 13px;
+}
+
+
+.warning-text {
+    color: #9a5b00;
+
+    font-size: 13px;
+}
+
+
+/* ==========================================================================
+   29. MOBILE RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 600px) {
+
+    .auth-screen {
+        align-items: flex-start;
+
+        padding:
+            20px
+            14px
+            calc(20px + env(safe-area-inset-bottom));
+    }
+
+
+    .auth-card {
+        margin-top: 25px;
+
+        padding: 22px 18px;
+
+        border-radius: 17px;
+
+        box-shadow:
+            0 5px 25px rgba(0, 0, 0, 0.09);
+    }
+
+
+    .auth-card h1 {
+        font-size: 27px;
+    }
+
+
+    header.top {
+        min-height: 54px;
+
+        padding:
+            8px 11px;
+    }
+
+
+    .brand-title {
+        font-size: 15px;
+    }
+
+
+    main.chat {
+        padding:
+            14px
+            12px
+            20px;
+    }
+
+
+    .message {
+        max-width: 88%;
+
+        font-size: 14px;
+    }
+
+
+    .bottom {
+        padding:
+            7px
+            9px
+            calc(7px + env(safe-area-inset-bottom));
+    }
+
+
+    .composer {
+        min-height: 51px;
+
+        padding: 5px 7px;
+
+        gap: 4px;
+    }
+
+
+    .plus-cancel-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+
+    .composer-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+
+    .send-btn {
+        width: 33px;
+        height: 33px;
+    }
+
+
+    .text-input {
+        font-size: 14px;
+    }
+
+
+    .more-menu {
+        top: 53px;
+
+        left: 8px;
+        right: 8px;
+
+        width: auto;
+    }
+
+
+    .attachment-menu {
+        left: 9px;
+        bottom: 72px;
+
+        width: 175px;
+    }
+
+
+    .page-layer {
+        padding: 10px;
+    }
+
+
+    .modal-content {
+        margin: 15px auto;
+
+        padding: 16px;
+
+        border-radius: 14px;
+    }
+
+
+    .canvas-3d-container {
+        height: 240px;
+    }
+
+
+    .personal-assistant-room {
+        width: 140px;
+        height: 120px;
+    }
+
+
+    .outer-hall {
+        left: 155px;
+    }
+
+
+    .modal-button-row {
+        flex-direction: column;
+    }
+
+}
+
+
+/* ==========================================================================
+   30. VERY SMALL MOBILE DEVICES
+   ========================================================================== */
+
+@media (max-width: 380px) {
+
+    .auth-card {
+        padding: 19px 14px;
+    }
+
+
+    .auth-card h1 {
+        font-size: 24px;
+    }
+
+
+    .brand-title {
+        font-size: 14px;
+    }
+
+
+    .composer-btn {
+        width: 31px;
+        height: 31px;
+    }
+
+
+    .plus-cancel-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+
+    .send-btn {
+        width: 31px;
+        height: 31px;
+    }
+
+
+    .text-input {
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+
+}
+
+
+/* ==========================================================================
+   31. LANDSCAPE MOBILE
+   ========================================================================== */
+
+@media (
+    max-height: 500px
+) and (
+    orientation: landscape
+) {
+
+    .auth-screen {
+        align-items: flex-start;
+    }
+
+
+    .auth-card {
+        margin: 10px auto;
+    }
+
+
+    .auth-card h1 {
+        font-size: 23px;
+    }
+
+
+    .auth-panel input {
+        height: 40px;
+    }
+
+
+    .primary-btn,
+    .secondary-btn,
+    .emergency-btn {
+        min-height: 38px;
+    }
+
+
+    .bottom {
+        padding-top: 5px;
+    }
+
+}
+
+
+/* ==========================================================================
+   32. SAFE AREA SUPPORT
+   ========================================================================== */
+
+@supports (
+    padding: env(safe-area-inset-bottom)
+) {
+
+    .bottom {
+        padding-bottom:
+            calc(
+                9px +
+                env(safe-area-inset-bottom)
+            );
+    }
+
+}
+
+
+/* ==========================================================================
+   33. REDUCED MOTION
+   ========================================================================== */
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+
+        transition-duration: 0.01ms !important;
+    }
+
+}
