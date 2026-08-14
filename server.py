@@ -1,16 +1,60 @@
-from flask import Flask, request, jsonify
-from dotenv import load_dotenv
-load_dotenv("/home/MAmir353/My-paserver/.env")
-from flask_cors import CORS
 import os
 import json
 import urllib.request
 import urllib.error
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from dotenv import load_dotenv
+
+# .env فائل کو لوڈ کرنا
+load_dotenv("/home/MAmir353/My-paserver/.env")
 
 app = Flask(__name__)
 CORS(app)
 
-OPENAI_URL = "https://api.openai.com/v1/responses"
+GEMINI_MODEL = "gemini-1.5-flash"
+
+def call_gemini_api(message, api_key):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={api_key}"
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": message}]
+            }
+        ]
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=30) as response:
+        result = json.loads(response.read().decode("utf-8"))
+        reply = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return reply
+
+def call_openai_api(message, api_key):
+    url = "https://api.openai.com/v1/chat/completions"
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "user", "content": message}
+        ]
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        },
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=30) as response:
+        result = json.loads(response.read().decode("utf-8"))
+        reply = result["choices"][0]["message"]["content"].strip()
+        return reply
 
 @app.route("/")
 def home():
@@ -18,60 +62,60 @@ def home():
 
 @app.route("/health")
 def health():
-    return jsonify({"ok": True, "api_key_configured": bool(os.environ.get("OPENAI_API_KEY"))})
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    return jsonify({
+        "ok": True,
+        "gemini_configured": bool(gemini_key),
+        "openai_configured": bool(openai_key)
+    })
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    api_key = os.environ.get("OPENAI_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "OPENAI_API_KEY is not configured"}), 500
-
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
 
     if not message:
-        return jsonify({"error": "Message is empty"}), 400
-
-    payload = {
-        "model": "gpt-5-mini",
-        "input": message
-    }
-
-    req = urllib.request.Request(
-        OPENAI_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + api_key
-        },
-        method="POST"
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=60) as response:
-            result = json.loads(response.read().decode("utf-8"))
-
-        reply = result.get("output_text", "").strip()
-
-        return jsonify({
-            "ok": True,
-            "reply": reply
-        })
-
-    except urllib.error.HTTPError as e:
-        details = e.read().decode("utf-8", errors="replace")
         return jsonify({
             "ok": False,
-            "error": "OpenAI API error",
-            "details": details
-        }), e.code
+            "error": "Message is empty. Please enter a message."
+        }), 400
 
-    except Exception as e:
-        return jsonify({
-            "ok": False,
-            "error": str(e)
-        }), 500
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    openai_key = os.environ.get("OPENAI_API_KEY")
+
+    # 1. First try Gemini API
+    if gemini_key:
+        try:
+            reply = call_gemini_api(message, gemini_key)
+            if reply:
+                return jsonify({
+                    "ok": True,
+                    "reply": reply,
+                    "source": "gemini"
+                })
+        except Exception as e:
+            print(f"Gemini API error: {e}")
+
+    # 2. Fallback to OpenAI API
+    if openai_key:
+        try:
+            reply = call_openai_api(message, openai_key)
+            if reply:
+                return jsonify({
+                    "ok": True,
+                    "reply": reply,
+                    "source": "openai"
+                })
+        except Exception as e:
+            print(f"OpenAI API error: {e}")
+
+    # 3. Friendly English fallback error if both fail
+    return jsonify({
+        "ok": False,
+        "error": "Our AI assistant is temporarily busy processing requests. Please wait a moment and try again!"
+    }), 503
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
+                    
