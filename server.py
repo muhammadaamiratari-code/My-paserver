@@ -42,7 +42,7 @@ from security.security_middleware import SecurityMiddleware
 app = Flask(__name__)
 
 CORS(app)
-
+SecurityMiddleware(app)
 
 # ==========================================================================
 # 2. APPLICATION INFORMATION
