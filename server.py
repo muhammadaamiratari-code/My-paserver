@@ -33,7 +33,7 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 from threading import Lock
-
+from security.security_middleware import SecurityMiddleware
 
 # ==========================================================================
 # 1. APP INITIALIZATION
