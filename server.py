@@ -1,75 +1,68 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
-import json
-import urllib.request
-import urllib.error
+from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
 
 app = Flask(__name__)
-CORS(app)
 
-OPENAI_URL = "https://api.openai.com/v1/responses"
+# یہاں اپنی Gemini API Key درج کریں
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
+genai.configure(api_key=GEMINI_API_KEY)
+
+# سسٹم پرامپٹ: سچائی، اخلاص اور کوڈنگ میں مہارت
+SYSTEM_INSTRUCTION = """
+آپ کا نام MyPA ہے۔ آپ ایک انتہائی مخلص، وفادار اور 100% سچے پرسنل اسسٹنٹ ہیں۔
+آپ کی بنیادی خصوصیات:
+1. آپ ہر حال میں سچ بولیں گے۔ کبھی کوئی جھوٹ، فرضی معلومات یا دھوکہ نہیں دیں گے۔
+2. آپ کے پاس پچھلی تمام بات چیت اور کوڈنگ کی یادداشت موجود ہے۔ اگر صارف پچھلے ایک ہفتے میں سے کسی خاص دن یا وقت کے کوڈ کا حوالہ دے، تو اسے درست کوڈ نکال کر دیں۔
+3. آپ ایک ماہر پروگرامر اور کوڈر ہیں۔
+4. اگر آپ کو کسی سوال کا جواب معلوم نہ ہو تو صاف اور سچائی سے اعتراف کریں۔
+"""
 
 @app.route("/")
-def home():
-    return jsonify({"status": "online", "name": "MyPA"})
+def index():
+    return render_template("index.html")
 
-@app.route("/health")
-def health():
-    return jsonify({"ok": True, "api_key_configured": bool(os.environ.get("OPENAI_API_KEY"))})
-
-@app.route("/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
 def chat():
-    api_key = os.environ.get("OPENAI_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "OPENAI_API_KEY is not configured"}), 500
-
-    data = request.get_json(silent=True) or {}
-    message = str(data.get("message", "")).strip()
-
-    if not message:
-        return jsonify({"error": "Message is empty"}), 400
-
-    payload = {
-        "model": "gpt-5-mini",
-        "input": message
-    }
-
-    req = urllib.request.Request(
-        OPENAI_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + api_key
-        },
-        method="POST"
-    )
-
     try:
-        with urllib.request.urlopen(req, timeout=60) as response:
-            result = json.loads(response.read().decode("utf-8"))
+        data = request.json
+        user_message = data.get("message", "")
+        history = data.get("history", [])
+        image_data = data.get("image", None)
 
-        reply = result.get("output_text", "").strip()
+        # Gemini Model Setup
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
-        return jsonify({
-            "ok": True,
-            "reply": reply
-        })
+        # گفتگو کی ہسٹری مرتب کریں
+        formatted_contents = [{"role": "user", "parts": [SYSTEM_INSTRUCTION]}]
+        
+        for item in history:
+            role = "user" if item.get("sender") == "user" else "model"
+            formatted_contents.append({
+                "role": role,
+                "parts": [item.get("text", "")]
+            })
 
-    except urllib.error.HTTPError as e:
-        details = e.read().decode("utf-8", errors="replace")
-        return jsonify({
-            "ok": False,
-            "error": "OpenAI API error",
-            "details": details
-        }), e.code
+        # موجودہ میسج کی تیاری
+        current_parts = [user_message]
+        
+        if image_data:
+            # اگر تصویر بھیجی گئی ہو
+            import base64
+            image_bytes = base64.b64decode(image_data.split(",")[1])
+            image_part = {
+                "mime_type": "image/jpeg",
+                "data": image_bytes
+            }
+            current_parts.append(image_part)
+
+        formatted_contents.append({"role": "user", "parts": current_parts})
+
+        response = model.generate_content(formatted_contents)
+        return jsonify({"reply": response.text, "success": True})
 
     except Exception as e:
-        return jsonify({
-            "ok": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"reply": f"خرابی: {str(e)}", "success": False})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)
