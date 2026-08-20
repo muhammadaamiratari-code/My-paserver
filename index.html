@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ur">
 <head>
     <meta charset="UTF-8">
@@ -15,14 +15,21 @@
     <div id="input-container">
         <!-- پلس / ضرب بٹن -->
         <button id="plus-btn" onclick="handlePlusClick()">+</button>
+
         <!-- صرف تصاویر کے لیے اپلوڈ ان پٹ -->
         <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="handleImageSelected(event)">
 
         <!-- ٹیکسٹ ان پٹ -->
-        <input type="text" id="user-input" placeholder="یہاں لکھیں یا بولیں..." onkeydown="checkEnter(event)">
+        <input type="text" id="user-input" placeholder="یہاں لکھیں یا بولیں..." onkeydown="checkEnter(event)" oninput="updateSendButton()">
 
         <!-- وائس ریکارڈنگ بٹن -->
-        <button id="mic-btn" onclick="toggleSpeech()">🎙️</button>
+        <button id="mic-btn" onclick="toggleSpeech()" aria-label="مائیک">🎙️</button>
+
+        <!-- AI وائس کال بٹن -->
+        <button id="call-btn" onclick="toggleVoiceCall()" aria-label="AI وائس کال">☎</button>
+
+        <!-- سینڈ بٹن -->
+        <button id="send-btn" onclick="sendPayload()" aria-label="پیغام بھیجیں">➤</button>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
