@@ -1,4 +1,4 @@
-* {
+{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -91,18 +91,137 @@ body, html {
     background: transparent;
 }
 
-#plus-btn, #mic-btn {
+#plus-btn,
+#mic-btn,
+#call-btn,
+#send-btn {
     background: none;
     border: none;
     font-size: 22px;
     cursor: pointer;
     width: 38px;
     height: 38px;
+    min-width: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #333333;
     user-select: none;
+    position: relative;
+}
+
+#send-btn {
+    color: #c8c8c8;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+#send-btn.active {
+    color: #000000;
+}
+
+#send-btn:active {
+    transform: scale(0.9);
+}
+
+#call-btn {
+    color: #333333;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+#call-btn.active {
+    color: #d32f2f;
+}
+
+#call-btn:active {
+    transform: scale(0.9);
+}
+
+#mic-btn {
+    font-size: 0;
+}
+
+#mic-btn::before {
+    content: "";
+    width: 11px;
+    height: 19px;
+    border: 2px solid #333333;
+    border-radius: 7px;
+    display: block;
+    position: absolute;
+    top: 6px;
+}
+
+#mic-btn::after {
+    content: "";
+    width: 17px;
+    height: 10px;
+    border: 2px solid #333333;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    display: block;
+    position: absolute;
+    top: 17px;
+}
+
+#mic-btn.recording::before {
+    border-color: #d32f2f;
+}
+
+#mic-btn.recording::after {
+    border-color: #d32f2f;
+}
+
+#plus-btn.recording {
+    color: #d32f2f;
+}
+
+#voice-waves {
+    position: absolute;
+    right: -5px;
+    top: 3px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    pointer-events: none;
+}
+
+#voice-waves i {
+    width: 2px;
+    height: 7px;
+    background-color: #d32f2f;
+    border-radius: 2px;
+    animation: voiceWave 0.8s infinite ease-in-out;
+}
+
+#voice-waves i:nth-child(1) {
+    animation-delay: 0s;
+}
+
+#voice-waves i:nth-child(2) {
+    animation-delay: 0.12s;
+}
+
+#voice-waves i:nth-child(3) {
+    animation-delay: 0.24s;
+}
+
+#voice-waves i:nth-child(4) {
+    animation-delay: 0.36s;
+}
+
+#voice-waves i:nth-child(5) {
+    animation-delay: 0.48s;
+}
+
+@keyframes voiceWave {
+    0%, 100% {
+        height: 7px;
+    }
+
+    50% {
+        height: 22px;
+    }
 }
 
 /* پری لوڈڈ کوڈ فارمیٹنگ */
