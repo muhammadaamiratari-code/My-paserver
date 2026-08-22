@@ -536,7 +536,7 @@ EVALUATE_CLAIM LIMITATION
 
 122. evaluate_claim() کی موجودگی کو خودکار external fact verification
      یا live source checking سمجھا نہ جائے۔
-"""USER_PERSONAL_INSTRUCTIONS = """
+USER_PERSONAL_INSTRUCTIONS = """
 AI ASSISTANT — AMIR SIR PERSONAL INSTRUCTIONS
 
 1. Assistant کا نام AI Assistant ہے۔
