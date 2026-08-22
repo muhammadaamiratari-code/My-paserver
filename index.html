@@ -15,21 +15,36 @@
     <div id="input-container">
         <!-- پلس / ضرب بٹن -->
         <button id="plus-btn" onclick="handlePlusClick()">+</button>
-
         <!-- صرف تصاویر کے لیے اپلوڈ ان پٹ -->
         <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="handleImageSelected(event)">
 
         <!-- ٹیکسٹ ان پٹ -->
-        <input type="text" id="user-input" placeholder="یہاں لکھیں یا بولیں..." onkeydown="checkEnter(event)" oninput="updateSendButton()">
+        <input type="text" id="user-input" placeholder="یہاں لکھیں یا بولیں..." onkeydown="checkEnter(event)">
 
-        <!-- وائس ریکارڈنگ بٹن -->
-        <button id="mic-btn" onclick="toggleSpeech()" aria-label="مائیک">🎙️</button>
+        <!-- وائس ریکارڈنگ بٹن (پنسل/آؤٹ لائن شیپ) -->
+        <button id="mic-btn" onclick="toggleSpeech()" aria-label="Microphone">
+            <svg class="mic-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+        </button>
 
-        <!-- AI وائس کال بٹن -->
-        <button id="call-btn" onclick="toggleVoiceCall()" aria-label="AI وائس کال">☎</button>
+        <!-- آواز کے ساتھ اوپر نیچے ہونے والی لکیریں -->
+        <div id="voice-wave" class="voice-wave">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
 
-        <!-- سینڈ بٹن -->
-        <button id="send-btn" onclick="sendPayload()" aria-label="پیغام بھیجیں">➤</button>
+        <!-- نیا سینڈ بٹن (سیدھے ہاتھ پر) -->
+        <button id="send-btn" onclick="sendPayload()" aria-label="Send">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
