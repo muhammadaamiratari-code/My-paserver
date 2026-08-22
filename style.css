@@ -58,7 +58,31 @@ body, html {
     display: block;
 }
 
-/* سپیکر بٹن */
+/* پیغام کے ایکشن بٹنز (کاپی اور اسپیکر) */
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0.7;
+    padding: 2px 4px;
+    border-radius: 4px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-btn:active {
+    opacity: 1;
+    background-color: #f0f0f0;
+}
+
+/* پرانا سپیکر بٹن */
 .speaker-btn {
     background: none;
     border: none;
@@ -80,10 +104,13 @@ body, html {
     background-color: #ffffff;
     border-top: 1px solid #f0f0f0;
     gap: 8px;
+    position: relative;
+    z-index: 10;
 }
 
 #user-input {
     flex: 1;
+    min-width: 0; /* لمبا ٹیکسٹ ان پٹ کو پھیلنے سے روکتا ہے تاکہ بٹن نہ دبے */
     border: none;
     outline: none;
     padding: 10px;
@@ -103,6 +130,13 @@ body, html {
     justify-content: center;
     color: #333333;
     user-select: none;
+    flex-shrink: 0; /* موبائل کی بورڈ کھلنے پر بھی بٹن کا سائز چھوٹا نہیں ہوگا */
+    pointer-events: auto !important; /* یقینی بناتا ہے کہ ٹچ/کلک 100% ریسپانس کرے */
+    -webkit-tap-highlight-color: transparent;
+}
+
+#send-btn {
+    z-index: 15; /* بٹن کو لیئر میں سب سے اوپر رکھتا ہے */
 }
 
 /* وائس ویو (آواز کے ساتھ اوپر نیچے ہونے والی لکیریں) */
@@ -111,6 +145,7 @@ body, html {
     align-items: center;
     gap: 3px;
     height: 20px;
+    flex-shrink: 0;
 }
 
 .voice-wave.active {
