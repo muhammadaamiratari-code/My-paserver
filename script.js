@@ -7,7 +7,16 @@ window.onload = () => {
     cleanOldHistory();
     renderHistory();
     initSpeechRecognition();
+    setupSendButton(); // صرف سینڈ بٹن کو جوڑنے کے لیے
 };
+
+// کی بورڈ اور سینڈ بٹن کو جوڑنے کا نیا لاجک (مائیک میں کوئی تبدیلی نہیں)
+function setupSendButton() {
+    const sendBtn = document.getElementById("send-btn");
+    if (sendBtn) {
+        sendBtn.onclick = () => sendPayload();
+    }
+}
 
 // 7 دن پرانی ہسٹری صاف کریں
 function cleanOldHistory() {
@@ -73,7 +82,7 @@ function formatCodeText(text) {
     return text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
 }
 
-// پیغام سرور کو بھیجیں
+// پیغام سرور کو بھیجیں (آپ کا وہی اصل فنکشن)
 async function sendPayload() {
     const inputEl = document.getElementById("user-input");
     const text = inputEl.value.trim();
@@ -146,7 +155,7 @@ function handleImageSelected(e) {
     e.target.value = "";
 }
 
-// وائس ٹرانسکریپشن (Speech to Text)
+// وائس ٹرانسکریپشن - آپ کا وہی اصل کوڈ
 function initSpeechRecognition() {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
