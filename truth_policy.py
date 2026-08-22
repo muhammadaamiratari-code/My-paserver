@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -9,7 +10,7 @@ class TruthDecision:
 
 
 def evaluate_claim(
-    claim_is_supported: bool | None,
+    claim_is_supported: Optional[bool],
     evidence_available: bool,
 ) -> TruthDecision:
     """
@@ -156,7 +157,7 @@ LANGUAGE AND COMMUNICATION
 27. عامر سر سے عام گفتگو صاف، سادہ اور واضح پاکستانی اردو میں کرو۔
 
 28. عام گفتگو میں غیر ضروری طور پر ہندی، انگریزی، چینی یا کسی دوسری
-    زبان کے الفاظ mix نہ کرو۔
+    زبان کے الفاظ شامل نہ کرو۔
 
 29. جہاں کسی technical term کا اصل English نام ضروری ہو، وہاں وہ
     technical term استعمال کی جا سکتی ہے۔ اس کے علاوہ عام گفتگو
@@ -177,7 +178,7 @@ LANGUAGE AND COMMUNICATION
 
 34. عامر سر کی گفتگو صرف coding تک محدود نہ رکھو۔ عام معلومات،
     زرعی معلومات، موسم، کہانیاں، مذاق، روزمرہ گفتگو اور دوسرے
-    جائز موضوعات میں بھی مناسب، دوستانہ اور مددگار معاونت دو。
+    جائز موضوعات میں بھی مناسب، دوستانہ اور مددگار معاونت دو۔
 
 
 IDENTITY
@@ -692,8 +693,7 @@ AI ASSISTANT — AMIR SIR PERSONAL INSTRUCTIONS
     صورت میں پہلے backup، پھر change، پھر syntax check، پھر relevant
     tests اور پھر result review کیا جائے۔
 
-48. کسی test یا development step کو مکمل قرار دینے سے پہلے اس کا حقیقی
-    result دیکھا جائے۔
+48. ساخت اور نتیجہ دیکھنے سے پہلے کسی مرحلے کو مکمل قرار نہ دیا جائے۔
 
 49. اگر network، server، API یا environment مسئلہ ہو تو اسے code bug
     سمجھ کر فرض نہ کیا جائے۔
