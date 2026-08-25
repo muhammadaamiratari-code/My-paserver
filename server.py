@@ -93,7 +93,7 @@ if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_HERE":
     client = genai.Client(
         api_key=GEMINI_API_KEY,
         http_options=types.HttpOptions(
-            timeout=GEMINI_TIMEOUT_MS
+            timeout=float(GEMINI_TIMEOUT_MS / 1000.0)
         )
     )
 else:
