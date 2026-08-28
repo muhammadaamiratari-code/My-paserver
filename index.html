@@ -8,45 +8,311 @@
 </head>
 <body>
 
-    <!-- مکمل چاٹ ونڈو -->
+    <div id="top-right-menu-container">
+        <button
+            id="three-dots-btn"
+            type="button"
+            onclick="toggleMenu()"
+            aria-label="Menu"
+            aria-expanded="false"
+        >
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+                <circle cx="12" cy="5" r="2"/>
+                <circle cx="12" cy="12" r="2"/>
+                <circle cx="12" cy="19" r="2"/>
+            </svg>
+        </button>
+
+        <div id="dropdown-menu" class="dropdown-content" hidden>
+            <button
+                type="button"
+                class="menu-item"
+                onclick="openModal('modal-settings')"
+            >
+                Settings
+            </button>
+
+            <button
+                type="button"
+                class="menu-item"
+                onclick="openModal('modal-ai-system')"
+            >
+                AI System
+            </button>
+
+            <button
+                type="button"
+                class="menu-item"
+                onclick="openModal('modal-local-memories')"
+            >
+                Local Memories
+            </button>
+        </div>
+    </div>
+
+
+    <!-- =========================
+         SETTINGS
+         ========================= -->
+
+    <div id="modal-settings" class="modal-overlay" hidden>
+        <div
+            class="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-title"
+        >
+            <h3 id="settings-title">سیٹنگز (Settings)</h3>
+
+            <div class="setting-row">
+                <label for="theme-select">تھیم (Appearance):</label>
+
+                <select id="theme-select">
+                    <option value="light">لائٹ موڈ (Light)</option>
+                    <option value="dark">ڈارک موڈ (Dark)</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <label for="font-size-select">ٹیکسٹ سائز (Font Size):</label>
+
+                <select id="font-size-select">
+                    <option value="normal">عام (Normal)</option>
+                    <option value="large">بڑا (Large)</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <button
+                    id="clear-history-btn"
+                    type="button"
+                    class="danger-btn"
+                >
+                    چیٹ ہسٹری صاف کریں (Clear Chat)
+                </button>
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                onclick="closeModal('modal-settings')"
+            >
+                بند کریں
+            </button>
+        </div>
+    </div>
+
+
+    <!-- =========================
+         AI SYSTEM
+         ========================= -->
+
+    <div id="modal-ai-system" class="modal-overlay" hidden>
+        <div
+            class="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ai-system-title"
+        >
+            <h3 id="ai-system-title">اے آئی سسٹم (AI System)</h3>
+
+            <div class="setting-row">
+                <label for="voice-tone">
+                    وائس ٹون (Voice Tone):
+                </label>
+
+                <select id="voice-tone">
+                    <option value="male">مردانہ آواز (Male Tone)</option>
+                    <option value="female">زنانہ آواز (Female Tone)</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <label for="speech-rate">
+                    آواز کی رفتار (Speech Speed):
+                </label>
+
+                <input
+                    type="range"
+                    id="speech-rate"
+                    min="0.5"
+                    max="1.5"
+                    step="0.1"
+                    value="1"
+                >
+
+                <div id="speech-rate-value" class="range-value">
+                    1.0x
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <label for="response-style">
+                    جواب کا انداز (Response Style):
+                </label>
+
+                <select id="response-style">
+                    <option value="direct">
+                        حقیقت اور براہ راست (Direct & Truth-First)
+                    </option>
+
+                    <option value="detailed">
+                        تفصیلی (Detailed)
+                    </option>
+                </select>
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                onclick="closeModal('modal-ai-system')"
+            >
+                بند کریں
+            </button>
+        </div>
+    </div>
+
+
+    <!-- =========================
+         LOCAL MEMORIES
+         ========================= -->
+
+    <div id="modal-local-memories" class="modal-overlay" hidden>
+        <div
+            class="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="local-memory-title"
+        >
+            <h3 id="local-memory-title">
+                لوکل میموریز (Local Memories)
+            </h3>
+
+            <p id="local-memory-status" class="memory-status">
+                Local Memory کی حالت چیک ہو رہی ہے...
+            </p>
+
+            <div
+                id="project-folders-list"
+                class="project-folders-list"
+            >
+                <div class="memory-empty">
+                    ابھی Local Memory کے projects کی فہرست کے لیے
+                    server-side memory management API درکار ہے۔
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                onclick="closeModal('modal-local-memories')"
+            >
+                بند کریں
+            </button>
+        </div>
+    </div>
+
+
+    <!-- =========================
+         CHAT
+         ========================= -->
+
     <div id="chat-container"></div>
 
-    <!-- نیچے دیا گیا ان پٹ بار -->
+
+    <!-- =========================
+         INPUT BAR
+         ========================= -->
+
     <div id="input-container">
-        <!-- پلس / ضرب بٹن -->
-        <button id="plus-btn" type="button" onclick="handlePlusClick()">+</button>
-        <!-- صرف تصاویر کے لیے اپلوڈ ان پٹ -->
-        <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="handleImageSelected(event)">
 
-        <!-- ٹیکسٹ ان پٹ -->
-        <input type="text" id="user-input" placeholder="یہاں لکھیں یا بولیں..." autocomplete="off">
+        <button
+            id="plus-btn"
+            type="button"
+            onclick="handlePlusClick()"
+            aria-label="Image"
+        >
+            +
+        </button>
 
-        <!-- وائس ریکارڈنگ بٹن -->
-        <button id="mic-btn" type="button" onclick="toggleSpeech()" aria-label="Microphone">
-            <svg class="mic-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <input
+            type="file"
+            id="image-input"
+            accept="image/*"
+            style="display: none;"
+            onchange="handleImageSelected(event)"
+        >
+
+        <input
+            type="text"
+            id="user-input"
+            placeholder="یہاں لکھیں یا بولیں..."
+            autocomplete="off"
+            aria-label="Message"
+        >
+
+        <button
+            id="mic-btn"
+            type="button"
+            onclick="toggleSpeech()"
+            aria-label="Microphone"
+            aria-pressed="false"
+        >
+            <svg
+                class="mic-icon"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                 <line x1="12" y1="19" x2="12" y2="22"></line>
             </svg>
         </button>
 
-        <!-- آواز کی ویو اینیمیشن -->
-        <div id="voice-wave" class="voice-wave">
+        <div
+            id="voice-wave"
+            class="voice-wave"
+            aria-hidden="true"
+        >
             <span></span>
             <span></span>
             <span></span>
             <span></span>
         </div>
 
-        <!-- حتمی سینڈ بٹن -->
-        <button id="send-btn" type="button" onclick="sendPayload()" aria-label="Send">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button
+            id="send-btn"
+            type="button"
+            onclick="sendPayload()"
+            aria-label="Send"
+        >
+            <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
         </button>
+
     </div>
 
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 </html>
