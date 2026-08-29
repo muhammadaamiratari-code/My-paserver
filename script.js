@@ -964,4 +964,443 @@ function initSpeechRecognition() {
     recognition.onend = () => {
         /*
          * جان بوجھ کر recognition.start()
-         * یہاں ن
+         * یہاں نہیں ہے۔
+         *
+         * اس سے duplicate transcription اور
+         * unexpected restart ختم ہوتے ہیں۔
+         */
+        isRecording = false;
+        updateRecordingUI(false);
+    };
+}
+
+
+/* ============================================================
+   START / STOP VOICE
+   ============================================================ */
+
+function toggleSpeech() {
+    if (!recognition) {
+        alert(
+            "آپ کا براؤزر وائس ان پٹ کو سپورٹ نہیں کرتا۔"
+        );
+        return;
+    }
+
+    if (!isRecording) {
+        startSpeech();
+    } else {
+        stopSpeech();
+    }
+}
+
+
+function startSpeech() {
+    if (!recognition || isRecording) {
+        return;
+    }
+
+    finalTranscript = "";
+    interimTranscript = "";
+
+    const inputEl =
+        document.getElementById(
+            "user-input"
+        );
+
+    /*
+     * نئی voice recording شروع کرتے وقت
+     * موجودہ input کو محفوظ رکھتے ہیں۔
+     * اگر input خالی ہو تو نئی transcription
+     * وہیں سے شروع ہوگی۔
+     */
+    if (inputEl) {
+        const existingText =
+            inputEl.value.trim();
+
+        if (existingText) {
+            finalTranscript =
+                existingText + " ";
+        }
+    }
+
+    try {
+        recognition.start();
+    } catch (err) {
+        console.warn(
+            "Speech start error:",
+            err
+        );
+
+        isRecording = false;
+        updateRecordingUI(false);
+    }
+}
+
+
+function stopSpeech() {
+    if (recognition && isRecording) {
+        try {
+            recognition.stop();
+        } catch (err) {
+            console.warn(
+                "Speech stop error:",
+                err
+            );
+        }
+    }
+
+    isRecording = false;
+    updateRecordingUI(false);
+}
+
+
+function updateRecordingUI(recording) {
+    const plusBtn =
+        document.getElementById(
+            "plus-btn"
+        );
+
+    const micBtn =
+        document.getElementById(
+            "mic-btn"
+        );
+
+    const voiceWave =
+        document.getElementById(
+            "voice-wave"
+        );
+
+    if (plusBtn) {
+        plusBtn.innerText =
+            recording ? "×" : "+";
+    }
+
+    if (micBtn) {
+        micBtn.classList.toggle(
+            "recording",
+            recording
+        );
+
+        micBtn.setAttribute(
+            "aria-pressed",
+            recording
+                ? "true"
+                : "false"
+        );
+    }
+
+    if (voiceWave) {
+        voiceWave.classList.toggle(
+            "active",
+            recording
+        );
+    }
+}
+
+
+/* ============================================================
+   CLEAR CHAT
+   ============================================================ */
+
+function clearChatHistory() {
+    const confirmed =
+        window.confirm(
+            "کیا آپ واقعی چیٹ ہسٹری صاف کرنا چاہتے ہیں؟"
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    history = [];
+
+    localStorage.removeItem(
+        "mypa_chat_history"
+    );
+
+    const chatContainer =
+        document.getElementById(
+            "chat-container"
+        );
+
+    if (chatContainer) {
+        chatContainer.innerHTML = "";
+    }
+
+    closeModal(
+        "modal-settings"
+    );
+}
+
+
+/* ============================================================
+   THREE-DOT MENU
+   ============================================================ */
+
+function toggleMenu() {
+    const menu =
+        document.getElementById(
+            "dropdown-menu"
+        );
+
+    const button =
+        document.getElementById(
+            "three-dots-btn"
+        );
+
+    if (!menu) {
+        return;
+    }
+
+    const shouldOpen =
+        menu.hasAttribute("hidden");
+
+    if (shouldOpen) {
+        menu.removeAttribute(
+            "hidden"
+        );
+    } else {
+        menu.setAttribute(
+            "hidden",
+            ""
+        );
+    }
+
+    if (button) {
+        button.setAttribute(
+            "aria-expanded",
+            shouldOpen
+                ? "true"
+                : "false"
+        );
+    }
+}
+
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+
+function openModal(modalId) {
+    const modal =
+        document.getElementById(
+            modalId
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.removeAttribute(
+        "hidden"
+    );
+
+    const menu =
+        document.getElementById(
+            "dropdown-menu"
+        );
+
+    const menuButton =
+        document.getElementById(
+            "three-dots-btn"
+        );
+
+    if (menu) {
+        menu.setAttribute(
+            "hidden",
+            ""
+        );
+    }
+
+    if (menuButton) {
+        menuButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+    }
+
+    if (
+        modalId ===
+        "modal-local-memories"
+    ) {
+        checkLocalMemoryStatus();
+    }
+}
+
+
+function closeModal(modalId) {
+    const modal =
+        document.getElementById(
+            modalId
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.setAttribute(
+        "hidden",
+        ""
+    );
+}
+
+
+/* ============================================================
+   OUTSIDE CLICK
+   ============================================================ */
+
+window.addEventListener(
+    "click",
+    function(event) {
+        const menuContainer =
+            document.getElementById(
+                "top-right-menu-container"
+            );
+
+        const menu =
+            document.getElementById(
+                "dropdown-menu"
+            );
+
+        if (
+            menuContainer &&
+            menu &&
+            !menuContainer.contains(
+                event.target
+            )
+        ) {
+            menu.setAttribute(
+                "hidden",
+                ""
+            );
+
+            const button =
+                document.getElementById(
+                    "three-dots-btn"
+                );
+
+            if (button) {
+                button.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        }
+    }
+);
+
+
+/* ============================================================
+   ESC KEY
+   ============================================================ */
+
+window.addEventListener(
+    "keydown",
+    function(event) {
+        if (event.key !== "Escape") {
+            return;
+        }
+
+        const modals =
+            document.querySelectorAll(
+                ".modal-overlay:not([hidden])"
+            );
+
+        modals.forEach(modal => {
+            modal.setAttribute(
+                "hidden",
+                ""
+            );
+        });
+
+        const menu =
+            document.getElementById(
+                "dropdown-menu"
+            );
+
+        if (menu) {
+            menu.setAttribute(
+                "hidden",
+                ""
+            );
+        }
+    }
+);
+
+
+/* ============================================================
+   LOCAL MEMORY STATUS
+   ============================================================ */
+
+async function checkLocalMemoryStatus() {
+    const status =
+        document.getElementById(
+            "local-memory-status"
+        );
+
+    if (!status) {
+        return;
+    }
+
+    status.textContent =
+        "Local Memory server سے چیک ہو رہی ہے...";
+
+    try {
+        const response =
+            await fetch(
+                "/api/health",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (
+            data.local_memory_available ===
+            true
+        ) {
+            status.textContent =
+                "✓ Local Memory: AVAILABLE — Python local_memory.py connected ہے۔";
+        } else {
+            status.textContent =
+                "⚠ Local Memory: AVAILABLE نہیں ہے۔";
+        }
+
+    } catch (err) {
+        status.textContent =
+            "⚠ Local Memory status server سے حاصل نہیں ہو سکی۔";
+
+        console.warn(
+            "Local memory status error:",
+            err
+        );
+    }
+}
+
+
+/* ============================================================
+   SPEECH VOICE LIST REFRESH
+   ============================================================ */
+
+if (
+    window.speechSynthesis &&
+    window.speechSynthesis.onvoiceschanged !== undefined
+) {
+    window.speechSynthesis.onvoiceschanged =
+        () => {
+            /*
+             * Browser voices بعد میں load کر سکتا ہے۔
+             * اس لیے یہاں صرف list کو refresh ہونے دیا جاتا ہے۔
+             */
+        };
+           }
