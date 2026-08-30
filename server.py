@@ -42,6 +42,35 @@ except Exception as exc:
     LOCAL_MEMORY_ERROR = str(exc)
 
 
+# ============================================================
+# DEVELOPMENT / TESTING TOOLS
+#
+# These modules are connected without changing their code.
+# The API below exposes their existing functions through
+# the server.
+# ============================================================
+
+try:
+    import dev_tools
+    import backup_manager
+    import testing_manager
+    import browser_testing
+    import git_manager
+
+    DEVELOPMENT_TOOLS_AVAILABLE = True
+    DEVELOPMENT_TOOLS_ERROR = ""
+
+except Exception as exc:
+    dev_tools = None
+    backup_manager = None
+    testing_manager = None
+    browser_testing = None
+    git_manager = None
+
+    DEVELOPMENT_TOOLS_AVAILABLE = False
+    DEVELOPMENT_TOOLS_ERROR = str(exc)
+
+
 app = Flask(__name__)
 
 
@@ -65,8 +94,8 @@ CORS(app)
 #   Secondary = Nemotron 3 Ultra
 #
 # Image:
-#   Primary   = Gemma 4 31B
-#   Fallback  = Gemini
+#   Primary  = Gemma 4 31B
+#   Fallback = Gemini
 # ------------------------------------------------------------
 
 OPENROUTER_API_KEY = os.environ.get(
@@ -335,6 +364,358 @@ def _remember_change(
 
 
 # ============================================================
+# DEVELOPMENT / TESTING TOOL HELPERS
+# ============================================================
+
+def _development_tools_ready():
+    return (
+        DEVELOPMENT_TOOLS_AVAILABLE
+        and dev_tools is not None
+        and backup_manager is not None
+        and testing_manager is not None
+        and browser_testing is not None
+        and git_manager is not None
+    )
+
+
+def _tool_result(module, function_name, *args, **kwargs):
+    if not _development_tools_ready():
+        return (
+            False,
+            "Development/testing tools unavailable: "
+            + DEVELOPMENT_TOOLS_ERROR
+        )
+
+    try:
+        function = getattr(module, function_name)
+    except AttributeError:
+        return (
+            False,
+            f"Tool function not available: {function_name}"
+        )
+
+    try:
+        return function(*args, **kwargs)
+
+    except Exception as exc:
+        return (
+            False,
+            f"{function_name} میں مسئلہ: {exc}"
+        )
+
+
+# ============================================================
+# DEVELOPMENT TOOL API
+# ============================================================
+
+@app.route(
+    "/api/dev-tools",
+    methods=["POST"]
+)
+def development_tools():
+
+    data = request.get_json(
+        silent=True
+    )
+
+    if not isinstance(
+        data,
+        dict
+    ):
+        data = {}
+
+    tool = str(
+        data.get(
+            "tool",
+            ""
+        )
+    ).strip()
+
+    action = str(
+        data.get(
+            "action",
+            ""
+        )
+    ).strip()
+
+    if not tool or not action:
+        return jsonify({
+            "success": False,
+            "reply": (
+                "Development tool اور action ضروری ہیں۔"
+            )
+        }), 400
+
+    # --------------------------------------------------------
+    # dev_tools.py
+    # --------------------------------------------------------
+
+    if tool == "dev_tools":
+
+        if action == "read_file":
+            success, result = _tool_result(
+                dev_tools,
+                "read_file",
+                data.get("file_path", "")
+            )
+
+        elif action == "find_errors":
+            success, result = _tool_result(
+                dev_tools,
+                "find_errors",
+                data.get("file_path", "")
+            )
+
+        elif action == "edit_file":
+            success, result = _tool_result(
+                dev_tools,
+                "edit_file",
+                data.get("file_path", ""),
+                data.get("old_text", ""),
+                data.get("new_text", ""),
+                data.get("create_backup", True)
+            )
+
+        elif action == "add_code":
+            success, result = _tool_result(
+                dev_tools,
+                "add_code",
+                data.get("file_path", ""),
+                data.get("new_code", ""),
+                data.get("position", "end"),
+                data.get("create_backup", True)
+            )
+
+        elif action == "list_project_files":
+            success, result = _tool_result(
+                dev_tools,
+                "list_project_files",
+                data.get("extensions")
+            )
+
+        else:
+            return jsonify({
+                "success": False,
+                "reply": (
+                    f"Unknown dev_tools action: {action}"
+                )
+            }), 400
+
+    # --------------------------------------------------------
+    # backup_manager.py
+    # --------------------------------------------------------
+
+    elif tool == "backup_manager":
+
+        if action == "create_backup":
+            success, result = _tool_result(
+                backup_manager,
+                "create_backup",
+                data.get("file_path", ""),
+                data.get("reason", "")
+            )
+
+        elif action == "restore_backup":
+            success, result = _tool_result(
+                backup_manager,
+                "restore_backup",
+                data.get("backup_path", "")
+            )
+
+        elif action == "list_backups":
+            success, result = _tool_result(
+                backup_manager,
+                "list_backups",
+                data.get("file_path")
+            )
+
+        else:
+            return jsonify({
+                "success": False,
+                "reply": (
+                    f"Unknown backup_manager action: {action}"
+                )
+            }), 400
+
+    # --------------------------------------------------------
+    # testing_manager.py
+    # --------------------------------------------------------
+
+    elif tool == "testing_manager":
+
+        if action == "run_python_syntax":
+            success, result = _tool_result(
+                testing_manager,
+                "run_python_syntax",
+                data.get("file_path", "")
+            )
+
+        elif action == "run_python_file":
+            success, result = _tool_result(
+                testing_manager,
+                "run_python_file",
+                data.get("file_path", ""),
+                data.get("args")
+            )
+
+        elif action == "check_server_health":
+            success, result = _tool_result(
+                testing_manager,
+                "check_server_health",
+                data.get(
+                    "url",
+                    "http://127.0.0.1:5000/api/health"
+                )
+            )
+
+        elif action == "get_test_history":
+            success, result = _tool_result(
+                testing_manager,
+                "get_test_history",
+                data.get("test_type"),
+                data.get("target")
+            )
+
+        else:
+            return jsonify({
+                "success": False,
+                "reply": (
+                    f"Unknown testing_manager action: {action}"
+                )
+            }), 400
+
+    # --------------------------------------------------------
+    # browser_testing.py
+    # --------------------------------------------------------
+
+    elif tool == "browser_testing":
+
+        if action == "open_browser":
+            success, result = _tool_result(
+                browser_testing,
+                "open_browser",
+                data.get("url", "")
+            )
+
+        elif action == "check_page_status":
+            success, result = _tool_result(
+                browser_testing,
+                "check_page_status",
+                data.get("url", ""),
+                data.get("expected_status", 200)
+            )
+
+        elif action == "test_form":
+            success, result = _tool_result(
+                browser_testing,
+                "test_form",
+                data.get("url", ""),
+                data.get("form_data", {}),
+                data.get("method", "POST")
+            )
+
+        else:
+            return jsonify({
+                "success": False,
+                "reply": (
+                    f"Unknown browser_testing action: {action}"
+                )
+            }), 400
+
+    # --------------------------------------------------------
+    # git_manager.py
+    # --------------------------------------------------------
+
+    elif tool == "git_manager":
+
+        if action == "git_status":
+            success, result = _tool_result(
+                git_manager,
+                "git_status",
+                data.get("repo_path")
+            )
+
+        elif action == "git_diff":
+            success, result = _tool_result(
+                git_manager,
+                "git_diff",
+                data.get("file_path"),
+                data.get("repo_path")
+            )
+
+        elif action == "git_add":
+            success, result = _tool_result(
+                git_manager,
+                "git_add",
+                data.get("file_path", ""),
+                data.get("repo_path")
+            )
+
+        elif action == "git_commit":
+            success, result = _tool_result(
+                git_manager,
+                "git_commit",
+                data.get("message", ""),
+                data.get("repo_path")
+            )
+
+        elif action == "git_push":
+            success, result = _tool_result(
+                git_manager,
+                "git_push",
+                data.get("branch", "main"),
+                data.get("repo_path")
+            )
+
+        elif action == "git_pull":
+            success, result = _tool_result(
+                git_manager,
+                "git_pull",
+                data.get("branch", "main"),
+                data.get("repo_path")
+            )
+
+        elif action == "git_log":
+            success, result = _tool_result(
+                git_manager,
+                "git_log",
+                data.get("limit", 10),
+                data.get("repo_path")
+            )
+
+        elif action == "git_create_branch":
+            success, result = _tool_result(
+                git_manager,
+                "git_create_branch",
+                data.get("branch_name", ""),
+                data.get("repo_path")
+            )
+
+        else:
+            return jsonify({
+                "success": False,
+                "reply": (
+                    f"Unknown git_manager action: {action}"
+                )
+            }), 400
+
+    else:
+        return jsonify({
+            "success": False,
+            "reply": (
+                f"Unknown development tool: {tool}"
+            )
+        }), 400
+
+    return jsonify({
+        "success": bool(success),
+        "tool": tool,
+        "action": action,
+        "result": result
+    }), (200 if success else 400)
+
+
+# ============================================================
 # OPENROUTER REQUEST HELPER
 # ============================================================
 
@@ -500,6 +881,14 @@ def health():
 
         "local_memory_available": (
             LOCAL_MEMORY_AVAILABLE
+        ),
+
+        "development_tools_available": (
+            DEVELOPMENT_TOOLS_AVAILABLE
+        ),
+
+        "development_tools_error": (
+            DEVELOPMENT_TOOLS_ERROR
         ),
 
         "primary_model": (
@@ -1171,6 +1560,22 @@ if __name__ == "__main__":
         print(
             "Local memory warning: "
             + LOCAL_MEMORY_ERROR
+        )
+
+    print(
+        "Development tools: "
+        + (
+            "AVAILABLE"
+            if DEVELOPMENT_TOOLS_AVAILABLE
+            else "UNAVAILABLE"
+        )
+    )
+
+    if DEVELOPMENT_TOOLS_ERROR:
+
+        print(
+            "Development tools warning: "
+            + DEVELOPMENT_TOOLS_ERROR
         )
 
     app.run(
