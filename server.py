@@ -1,889 +1,541 @@
-# ==========================================================================
-# My AI Hub - Master Flask Backend
-# Assistant: MyPA
-#
-# AI ROUTING:
-#   1. Gemini = PRIMARY AI
-#   2. OpenAI = FALLBACK AI
-#   3. Friendly user message if BOTH fail
-#
-# CONNECTED FRONTEND:
-#   index.html
-#   style.css
-#   script.js
-#
-# IMPORTANT:
-#   Never put real API keys directly inside this file.
-#   Use environment variables:
-#
-#       GEMINI_API_KEY
-#       OPENAI_API_KEY
-#       MYPA_MASTER_APP_CODE
-#       MYPA_OWNER_TOKEN
-#
-# ==========================================================================
-
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-
 import os
-import secrets
-import logging
-import traceback
-import uuid
-from datetime import datetime, timezone
-from threading import Lock
-from security.security_middleware import SecurityMiddleware
+import base64
+import json
+import urllib.request
 
-# ==========================================================================
-# 1. APP INITIALIZATION
-# ==========================================================================
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+from google import genai
+from google.genai import types
+
+from truth_policy import (
+    TRUTH_POLICY,
+    PROFESSIONAL_DEVELOPER_POLICY,
+    PROJECT_MEMORY_POLICY,
+    WORKFLOW_POLICY,
+    SECURITY_POLICY,
+    GENERAL_CONVERSATION_POLICY,
+    FACT_CHECKING_LIMITATION,
+    USER_PERSONAL_INSTRUCTIONS,
+)
+
+
+# ============================================================
+# LOCAL DEVELOPER MEMORY
+# ============================================================
+try:
+    import local_memory
+    local_memory.initialize_database()
+    LOCAL_MEMORY_AVAILABLE = True
+    LOCAL_MEMORY_ERROR = ""
+except Exception as exc:
+    local_memory = None
+    LOCAL_MEMORY_AVAILABLE = False
+    LOCAL_MEMORY_ERROR = str(exc)
+
+
+# ============================================================
+# DEVELOPMENT / TESTING TOOLS
+# ============================================================
+try:
+    import dev_tools
+    import backup_manager
+    import testing_manager
+    import browser_testing
+    import git_manager
+    DEVELOPMENT_TOOLS_AVAILABLE = True
+    DEVELOPMENT_TOOLS_ERROR = ""
+except Exception as exc:
+    dev_tools = backup_manager = testing_manager = browser_testing = git_manager = None
+    DEVELOPMENT_TOOLS_AVAILABLE = False
+    DEVELOPMENT_TOOLS_ERROR = str(exc)
+
 
 app = Flask(__name__)
-
 CORS(app)
-SecurityMiddleware(app)
-
-# ==========================================================================
-# 2. APPLICATION INFORMATION
-# ==========================================================================
-
-APP_NAME = "My AI Hub"
-ASSISTANT_NAME = "MyPA"
 
 
-# ==========================================================================
-# 3. AI CONFIGURATION
-# ==========================================================================
+# ============================================================
+# API CONFIGURATION
+# ============================================================
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_PRIMARY_MODEL = os.environ.get("OPENROUTER_PRIMARY_MODEL", "minimax/minimax-m3:free")
+OPENROUTER_SECONDARY_MODEL = os.environ.get("OPENROUTER_SECONDARY_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
+OPENROUTER_VISION_MODEL = os.environ.get("OPENROUTER_VISION_MODEL", "google/gemma-4-31b-it:free")
+OPENROUTER_PRIMARY_TIMEOUT = int(os.environ.get("OPENROUTER_PRIMARY_TIMEOUT", "20"))
+OPENROUTER_SECONDARY_TIMEOUT = int(os.environ.get("OPENROUTER_SECONDARY_TIMEOUT", "20"))
+OPENROUTER_VISION_TIMEOUT = int(os.environ.get("OPENROUTER_VISION_TIMEOUT", "20"))
 
-# Gemini is PRIMARY.
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_TIMEOUT_MS = int(os.environ.get("GEMINI_TIMEOUT_MS", "15000"))
 
-# Change this from environment variables if you want another model.
-GEMINI_MODEL = os.environ.get(
-    "GEMINI_MODEL",
-    "gemini-3.6-flash"
+client = None
+if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_HERE":
+    try:
+        client = genai.Client(
+            api_key=GEMINI_API_KEY,
+            http_options=types.HttpOptions(timeout=float(GEMINI_TIMEOUT_MS / 1000.0))
+        )
+    except Exception:
+        client = None
+
+
+SYSTEM_INSTRUCTION = (
+    TRUTH_POLICY + "\n\n" +
+    PROFESSIONAL_DEVELOPER_POLICY + "\n\n" +
+    PROJECT_MEMORY_POLICY + "\n\n" +
+    WORKFLOW_POLICY + "\n\n" +
+    SECURITY_POLICY + "\n\n" +
+    GENERAL_CONVERSATION_POLICY + "\n\n" +
+    FACT_CHECKING_LIMITATION + "\n\n" +
+    USER_PERSONAL_INSTRUCTIONS
 )
 
 
-# OpenAI is FALLBACK.
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-
-OPENAI_MODEL = os.environ.get(
-    "OPENAI_MODEL",
-    "gpt-5"
-)
-
-
-# ==========================================================================
-# 4. SECURITY CONFIGURATION
-# ==========================================================================
-
-MASTER_APP_CODE = os.environ.get(
-    "MYPA_MASTER_APP_CODE",
-    "CHANGE-ME-BEFORE-PRODUCTION"
-)
-
-OWNER_TOKEN = os.environ.get(
-    "MYPA_OWNER_TOKEN",
-    "CHANGE-ME-OWNER-TOKEN"
-)
+# ============================================================
+# LOCAL MEMORY HELPERS
+# ============================================================
+def _memory_project_id():
+    if not LOCAL_MEMORY_AVAILABLE:
+        return None
+    try:
+        project = local_memory.get_active_project()
+        return project["id"] if project else None
+    except Exception:
+        return None
 
 
-# ==========================================================================
-# 5. LOGGING
-# ==========================================================================
+def _memory_context():
+    if not LOCAL_MEMORY_AVAILABLE:
+        return ""
+    try:
+        project = local_memory.get_active_project()
+        if not project:
+            return ""
+        context = local_memory.get_project_context(project["id"])
+        if not context:
+            return ""
+        return json.dumps(context, ensure_ascii=False, default=str)[:30000]
+    except Exception:
+        return ""
 
-logging.basicConfig(
-    level=logging.INFO,
-    format=(
-        "%(asctime)s | "
-        "%(levelname)s | "
-        "%(name)s | "
-        "%(message)s"
+
+def _system_with_memory():
+    context = _memory_context()
+    if not context:
+        return SYSTEM_INSTRUCTION
+    return SYSTEM_INSTRUCTION + "\n\n=== LOCAL DEVELOPER MEMORY CONTEXT ===\n" + context + "\n=== END LOCAL DEVELOPER MEMORY CONTEXT ==="
+
+
+def _remember_message(role, content, project_id=None):
+    if not LOCAL_MEMORY_AVAILABLE:
+        return False
+    try:
+        pid = project_id if project_id is not None else _memory_project_id()
+        if pid is None:
+            return False
+        local_memory.add_chat_message(pid, role, str(content))
+        return True
+    except Exception:
+        return False
+
+
+def _remember_change(summary, file_path="server.py", result=""):
+    if not LOCAL_MEMORY_AVAILABLE:
+        return False
+    try:
+        pid = _memory_project_id()
+        if pid is None:
+            return False
+        local_memory.record_change(pid, summary=summary, file_path=file_path, reason="Server/API routing or memory integration", result=result)
+        return True
+    except Exception:
+        return False
+
+
+# ============================================================
+# DEVELOPMENT / TESTING TOOL BRIDGE
+# ============================================================
+def _development_tools_ready():
+    return DEVELOPMENT_TOOLS_AVAILABLE and all(
+        module is not None
+        for module in (dev_tools, backup_manager, testing_manager, browser_testing, git_manager)
     )
-)
-
-logger = logging.getLogger("my_ai_hub")
 
 
-# ==========================================================================
-# 6. ONE-TIME SECURITY CODES
-# ==========================================================================
-
-DEFAULT_OTP_CODES = [
-    "180090",
-    "992811",
-    "441029",
-    "882301",
-    "123450"
-]
-
-VALID_OTP_CODES = set(DEFAULT_OTP_CODES)
-
-OTP_LOCK = Lock()
+def _tool_result(module, function_name, *args, **kwargs):
+    if not _development_tools_ready():
+        return False, "Development/testing tools unavailable: " + DEVELOPMENT_TOOLS_ERROR
+    try:
+        function = getattr(module, function_name)
+    except AttributeError:
+        return False, f"Tool function not available: {function_name}"
+    try:
+        return function(*args, **kwargs)
+    except Exception as exc:
+        return False, f"{function_name} میں مسئلہ: {exc}"
 
 
-# ==========================================================================
-# 7. FRIENDLY USER MESSAGES
-# ==========================================================================
+TOOL_ACTIONS = {
+    "dev_tools": {"read_file", "find_errors", "edit_file", "add_code", "list_project_files"},
+    "backup_manager": {"create_backup", "restore_backup", "list_backups"},
+    "testing_manager": {"run_python_syntax", "run_python_file", "check_server_health", "get_test_history"},
+    "browser_testing": {"open_browser", "check_page_status", "test_form"},
+    "git_manager": {"git_status", "git_diff", "git_add", "git_commit", "git_push", "git_pull", "git_log", "git_create_branch"},
+}
 
-USER_MESSAGES = {
-
-    "empty_message":
-        "Please enter a message and try again.",
-
-    "network":
-        "We're having trouble connecting right now. Please check your internet connection and try again.",
-
-    "ai_unavailable":
-        "I'm unable to answer this right now. Please try again in a little while.",
-
-    "topic_unavailable":
-        "I'm unable to respond to this topic right now. Please try again later.",
-
-    "login_failed":
-        "We couldn't complete your login. Please check your details and try again.",
-
-    "gmail_failed":
-        "We couldn't verify this Gmail address. Please try again or use another Gmail address.",
-
-    "invalid_app_code":
-        "The application security code is not valid.",
-
-    "invalid_otp":
-        "This security code is invalid or has already been used.",
-
-    "access_denied":
-        "Access denied.",
-
-    "server_error":
-        "Something went wrong on our side. Please try again later."
+DESTRUCTIVE_ACTIONS = {
+    ("dev_tools", "edit_file"),
+    ("dev_tools", "add_code"),
+    ("backup_manager", "restore_backup"),
+    ("git_manager", "git_add"),
+    ("git_manager", "git_commit"),
+    ("git_manager", "git_push"),
+    ("git_manager", "git_pull"),
+    ("git_manager", "git_create_branch"),
 }
 
 
-# ==========================================================================
-# 8. HELPER FUNCTIONS
-# ==========================================================================
-
-def utc_now():
-    """Return current UTC time."""
-    return datetime.now(timezone.utc).isoformat()
-
-
-def create_error_id():
-    """Create a unique error/request ID."""
-    return f"ERR-{uuid.uuid4().hex[:10].upper()}"
-
-
-def json_error(
-    user_message,
-    status_code=400,
-    error_id=None,
-    **extra
-):
-    """
-    Return a clean response for the frontend.
-
-    IMPORTANT:
-    Technical traceback is NOT returned to normal users.
-    """
-
-    if error_id is None:
-        error_id = create_error_id()
-
-    response = {
-        "status": "ERROR",
-        "error": user_message,
-        "error_id": error_id,
-        "timestamp": utc_now()
+def _destructive_request_allowed(user_message, tool, action):
+    if (tool, action) not in DESTRUCTIVE_ACTIONS:
+        return True
+    text = str(user_message).lower()
+    keywords = {
+        "edit_file": ("edit", "modify", "change", "fix", "update", "تبدیل", "تبدیلی", "ترمیم", "درست", "فکس", "تبدیل کریں", "درست کریں"),
+        "add_code": ("add code", "code add", "include code", "کوڈ شامل", "کوڈ ایڈ", "شامل کریں"),
+        "restore_backup": ("restore", "بحال", "ری اسٹور"),
+        "git_add": ("git add", "add to git", "git میں add"),
+        "git_commit": ("commit", "کمٹ"),
+        "git_push": ("push", "git push", "پش"),
+        "git_pull": ("pull", "git pull", "پل"),
+        "git_create_branch": ("branch", "برانچ"),
     }
-
-    response.update(extra)
-
-    return jsonify(response), status_code
+    return any(word in text for word in keywords.get(action, ()))
 
 
-def get_json_body():
-    """Safely read JSON body."""
+def _execute_development_tool(tool, action, arguments, user_message):
+    if tool not in TOOL_ACTIONS or action not in TOOL_ACTIONS[tool]:
+        return False, f"Unsupported development tool action: {tool}/{action}"
+    if not isinstance(arguments, dict):
+        return False, "Tool arguments dictionary ہونا چاہیے۔"
+    if not _destructive_request_allowed(user_message, tool, action):
+        return False, "یہ تبدیلی والا tool user کی واضح درخواست کے بغیر نہیں چلایا جا سکتا۔"
 
-    data = request.get_json(silent=True)
+    if tool == "dev_tools":
+        mapping = {
+            "read_file": ("read_file", (arguments.get("file_path",),)),
+            "find_errors": ("find_errors", (arguments.get("file_path",),)),
+            "edit_file": ("edit_file", (arguments.get("file_path", ""), arguments.get("old_text", ""), arguments.get("new_text", ""), arguments.get("create_backup", True))),
+            "add_code": ("add_code", (arguments.get("file_path", ""), arguments.get("new_code", ""), arguments.get("position", "end"), arguments.get("create_backup", True))),
+            "list_project_files": ("list_project_files", (arguments.get("extensions"),)),
+        }
+        fn, args = mapping[action]
+        return _tool_result(dev_tools, fn, *args)
 
-    if not isinstance(data, dict):
-        return {}
+    if tool == "backup_manager":
+        mapping = {
+            "create_backup": ("create_backup", (arguments.get("file_path", ""), arguments.get("reason", ""))),
+            "restore_backup": ("restore_backup", (arguments.get("backup_path", ""),)),
+            "list_backups": ("list_backups", (arguments.get("file_path"),)),
+        }
+        fn, args = mapping[action]
+        return _tool_result(backup_manager, fn, *args)
 
-    return data
+    if tool == "testing_manager":
+        mapping = {
+            "run_python_syntax": ("run_python_syntax", (arguments.get("file_path", ""),)),
+            "run_python_file": ("run_python_file", (arguments.get("file_path", ""), arguments.get("args"))),
+            "check_server_health": ("check_server_health", (arguments.get("url", "http://127.0.0.1:5000/api/health"),)),
+            "get_test_history": ("get_test_history", (arguments.get("test_type"), arguments.get("target"))),
+        }
+        fn, args = mapping[action]
+        return _tool_result(testing_manager, fn, *args)
+
+    if tool == "browser_testing":
+        mapping = {
+            "open_browser": ("open_browser", (arguments.get("url", ""),)),
+            "check_page_status": ("check_page_status", (arguments.get("url", ""), arguments.get("expected_status", 200))),
+            "test_form": ("test_form", (arguments.get("url", ""), arguments.get("form_data", {}), arguments.get("method", "POST"))),
+        }
+        fn, args = mapping[action]
+        return _tool_result(browser_testing, fn, *args)
+
+    mapping = {
+        "git_status": ("git_status", (arguments.get("repo_path"),)),
+        "git_diff": ("git_diff", (arguments.get("file_path"), arguments.get("repo_path"))),
+        "git_add": ("git_add", (arguments.get("file_path", ""), arguments.get("repo_path"))),
+        "git_commit": ("git_commit", (arguments.get("message", ""), arguments.get("repo_path"))),
+        "git_push": ("git_push", (arguments.get("branch", "main"), arguments.get("repo_path"))),
+        "git_pull": ("git_pull", (arguments.get("branch", "main"), arguments.get("repo_path"))),
+        "git_log": ("git_log", (arguments.get("limit", 10), arguments.get("repo_path"))),
+        "git_create_branch": ("git_create_branch", (arguments.get("branch_name", ""), arguments.get("repo_path"))),
+    }
+    fn, args = mapping[action]
+    return _tool_result(git_manager, fn, *args)
 
 
-def is_owner_authenticated(data):
-    """
-    Verify the server-side owner token.
+DEVELOPMENT_TOOL_DEFINITION = {
+    "type": "function",
+    "function": {
+        "name": "development_tool",
+        "description": "Use the project's existing development/testing tools. Read, inspect, test, backup, browser-test, or perform Git operations only when appropriate. Do not invent tool results.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "tool": {"type": "string", "enum": list(TOOL_ACTIONS.keys())},
+                "action": {"type": "string"},
+                "arguments": {"type": "object"}
+            },
+            "required": ["tool", "action", "arguments"],
+            "additionalProperties": False
+        }
+    }
+}
 
-    Do not trust a simple 'role=OWNER' value from the browser.
-    """
 
-    supplied_token = str(
-        data.get("auth_token", "")
+def _messages_from_history(history, current_message):
+    messages = [{"role": "system", "content": _system_with_memory()}]
+    if isinstance(history, list):
+        for item in history:
+            if not isinstance(item, dict):
+                continue
+            text = str(item.get("text", "")).strip()
+            if not text:
+                continue
+            sender = item.get("sender", "user")
+            messages.append({"role": "user" if sender == "user" else "assistant", "content": text})
+    messages.append({"role": "user", "content": current_message})
+    return messages
+
+
+def _openrouter_raw(model, messages, timeout_seconds, tools=None):
+    if not OPENROUTER_API_KEY:
+        raise RuntimeError("OpenRouter API is not configured.")
+    payload = {"model": model, "messages": messages}
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = "auto"
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=body,
+        headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"},
+        method="POST"
     )
-
-    if not supplied_token:
-        return False
-
-    try:
-        return secrets.compare_digest(
-            supplied_token,
-            OWNER_TOKEN
-        )
-    except Exception:
-        return False
+    with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
+        raw = response.read().decode("utf-8")
+    result = json.loads(raw)
+    choices = result.get("choices", [])
+    if not choices:
+        raise RuntimeError("OpenRouter returned no choices.")
+    return choices[0].get("message", {})
 
 
-def get_request_role(data):
-    """
-    Determine whether this request belongs to Owner or User.
-
-    IMPORTANT:
-    Owner status is decided by authenticated token,
-    not by a normal frontend role string.
-    """
-
-    if is_owner_authenticated(data):
-        return "OWNER"
-
-    return "USER"
+def _answer_from_message(message):
+    answer = message.get("content")
+    if isinstance(answer, list):
+        answer = "\n".join(str(part.get("text")) for part in answer if isinstance(part, dict) and part.get("text"))
+    if not answer:
+        raise RuntimeError("OpenRouter returned an empty response.")
+    return str(answer).strip()
 
 
-def owner_error_response(
-    error_id,
-    endpoint,
-    function_name,
-    exception
-):
-    """
-    Detailed developer information for authenticated Owner.
-
-    Normal users never receive this information.
-    """
-
-    return {
-        "status": "ERROR",
-        "role": "OWNER",
-        "error_id": error_id,
-        "endpoint": endpoint,
-        "function": function_name,
-        "error_type": type(exception).__name__,
-        "developer_error_log": str(exception),
-        "traceback": traceback.format_exc(),
-        "timestamp": utc_now()
-    }
+def openrouter_request(model, messages, timeout_seconds):
+    return _answer_from_message(_openrouter_raw(model, messages, timeout_seconds))
 
 
-# ==========================================================================
-# 9. GEMINI PRIMARY AI
-# ==========================================================================
-
-def ask_gemini(user_message):
-    """
-    Send the user's message to Gemini.
-
-    Gemini is always attempted FIRST.
-    """
-
-    if not GEMINI_API_KEY:
-        raise RuntimeError(
-            "GEMINI_API_KEY is not configured."
-        )
-
-    try:
-        from google import genai
-
-        client = genai.Client(
-            api_key=GEMINI_API_KEY
-        )
-
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=user_message
-        )
-
-        answer = getattr(
-            response,
-            "text",
-            None
-        )
-
-        if not answer:
-            raise RuntimeError(
-                "Gemini returned an empty response."
-            )
-
-        return answer.strip()
-
-    except Exception as exc:
-
-        logger.error(
-            "Gemini request failed: %s",
-            exc,
-            exc_info=True
-        )
-
-        raise
+def openrouter_request_with_tools(model, messages, timeout_seconds, user_message, max_rounds=3):
+    working = list(messages)
+    for _ in range(max_rounds):
+        message = _openrouter_raw(model, working, timeout_seconds, tools=[DEVELOPMENT_TOOL_DEFINITION])
+        tool_calls = message.get("tool_calls") or []
+        if not tool_calls:
+            return _answer_from_message(message)
+        working.append(message)
+        for call in tool_calls:
+            function = call.get("function", {})
+            name = function.get("name")
+            if name != "development_tool":
+                result = (False, "Unknown tool function.")
+            else:
+                try:
+                    arguments = json.loads(function.get("arguments", "{}"))
+                except json.JSONDecodeError:
+                    arguments = {}
+                    result = (False, "Tool arguments JSON درست نہیں ہے۔")
+                else:
+                    result = _execute_development_tool(
+                        arguments.get("tool", ""),
+                        arguments.get("action", ""),
+                        arguments.get("arguments", {}),
+                        user_message
+                    )
+            working.append({
+                "role": "tool",
+                "tool_call_id": call.get("id", ""),
+                "content": json.dumps({"success": bool(result[0]), "result": result[1]}, ensure_ascii=False, default=str)
+            })
+    return openrouter_request(model, working, timeout_seconds)
 
 
-# ==========================================================================
-# 10. OPENAI FALLBACK AI
-# ==========================================================================
-
-def ask_openai(user_message):
-    """
-    Send the user's message to OpenAI.
-
-    This function is only called if Gemini fails.
-    """
-
-    if not OPENAI_API_KEY:
-        raise RuntimeError(
-            "OPENAI_API_KEY is not configured."
-        )
-
-    try:
-        from openai import OpenAI
-
-        client = OpenAI(
-            api_key=OPENAI_API_KEY
-        )
-
-        response = client.responses.create(
-            model=OPENAI_MODEL,
-            input=user_message
-        )
-
-        answer = getattr(
-            response,
-            "output_text",
-            None
-        )
-
-        if not answer:
-            raise RuntimeError(
-                "OpenAI returned an empty response."
-            )
-
-        return answer.strip()
-
-    except Exception as exc:
-
-        logger.error(
-            "OpenAI fallback request failed: %s",
-            exc,
-            exc_info=True
-        )
-
-        raise
+# ============================================================
+# GEMINI REQUEST HELPER
+# ============================================================
+def gemini_request(contents):
+    if not client:
+        raise RuntimeError("Gemini API is not configured.")
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=contents,
+        config=types.GenerateContentConfig(system_instruction=_system_with_memory())
+    )
+    answer = getattr(response, "text", None)
+    if not answer:
+        raise RuntimeError("Gemini returned an empty response.")
+    return answer.strip()
 
 
-# ==========================================================================
-# 11. AI ROUTER
-# ==========================================================================
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-def ask_ai_with_fallback(user_message):
-    """
-    AI priority:
-
-        Gemini
-          ↓
-        OpenAI
-          ↓
-        Friendly failure
-
-    Returns:
-        answer, provider
-    """
-
-    # ------------------------------------------------------
-    # FIRST: GEMINI
-    # ------------------------------------------------------
-
-    try:
-
-        answer = ask_gemini(
-            user_message
-        )
-
-        return answer, "Gemini"
-
-    except Exception as gemini_error:
-
-        logger.warning(
-            "Gemini failed. Switching to OpenAI fallback."
-        )
-
-    # ------------------------------------------------------
-    # SECOND: OPENAI
-    # ------------------------------------------------------
-
-    try:
-
-        answer = ask_openai(
-            user_message
-        )
-
-        return answer, "OpenAI"
-
-    except Exception as openai_error:
-
-        logger.error(
-            "Both Gemini and OpenAI failed."
-        )
-
-        raise RuntimeError(
-            "Both AI providers failed."
-        ) from openai_error
-
-
-# ==========================================================================
-# 12. HOME / SERVER STATUS
-# ==========================================================================
-
-@app.route("/", methods=["GET"])
-def home():
-
-    return jsonify({
-        "status": "Active",
-        "app_name": APP_NAME,
-        "assistant": ASSISTANT_NAME,
-        "server": "Flask",
-        "api": "Online",
-        "ai_priority": [
-            "Gemini",
-            "OpenAI"
-        ],
-        "timestamp": utc_now()
-    })
-
-
-# ==========================================================================
-# 13. HEALTH CHECK
-# ==========================================================================
 
 @app.route("/api/health", methods=["GET"])
-def health_check():
-
+def health():
     return jsonify({
-        "status": "OK",
-        "service": APP_NAME,
-        "assistant": ASSISTANT_NAME,
-        "gemini_configured": bool(GEMINI_API_KEY),
-        "openai_configured": bool(OPENAI_API_KEY),
-        "timestamp": utc_now()
+        "assistant": "AI Assistant", "service": "AI Assistant", "status": "OK",
+        "openrouter_configured": bool(OPENROUTER_API_KEY), "gemini_configured": bool(client),
+        "local_memory_available": LOCAL_MEMORY_AVAILABLE,
+        "development_tools_available": DEVELOPMENT_TOOLS_AVAILABLE,
+        "development_tools_error": DEVELOPMENT_TOOLS_ERROR,
+        "primary_model": OPENROUTER_PRIMARY_MODEL, "secondary_model": OPENROUTER_SECONDARY_MODEL,
+        "vision_model": OPENROUTER_VISION_MODEL,
+        "primary_timeout": OPENROUTER_PRIMARY_TIMEOUT, "secondary_timeout": OPENROUTER_SECONDARY_TIMEOUT,
+        "vision_timeout": OPENROUTER_VISION_TIMEOUT, "gemini_model": GEMINI_MODEL,
+        "gemini_timeout_seconds": GEMINI_TIMEOUT_MS / 1000.0,
     })
 
 
-# ==========================================================================
-# 14. STANDARD CHAT API
-# ==========================================================================
+@app.route("/api/dev-tools", methods=["POST"])
+def development_tools():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
+    tool = str(data.get("tool", "")).strip()
+    action = str(data.get("action", "")).strip()
+    if not tool or not action:
+        return jsonify({"success": False, "reply": "Development tool اور action ضروری ہیں۔"}), 400
+    success, result = _execute_development_tool(tool, action, data, str(data.get("user_message", "")))
+    return jsonify({"success": bool(success), "tool": tool, "action": action, "result": result}), (200 if success else 400)
+
 
 @app.route("/api/chat", methods=["POST"])
-def handle_chat():
-
-    endpoint = "/api/chat"
-    function_name = "handle_chat"
-
-    data = get_json_body()
-
-    user_message = str(
-        data.get("message", "")
-    ).strip()
-
-    role = get_request_role(data)
-
-    # ------------------------------------------------------
-    # Empty message
-    # ------------------------------------------------------
-
-    if not user_message:
-
-        return json_error(
-            USER_MESSAGES["empty_message"],
-            400
-        )
-
-    # ------------------------------------------------------
-    # AI ROUTER
-    # ------------------------------------------------------
-
+def chat():
+    project_id = _memory_project_id()
     try:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            data = {}
+        user_message = str(data.get("message", "")).strip()
+        history = data.get("history", [])
+        image_data = data.get("image")
+        if not user_message:
+            return jsonify({"reply": "Please enter a message.", "success": False}), 400
+        _remember_message("user", user_message, project_id)
 
-        answer, provider = ask_ai_with_fallback(
-            user_message
-        )
+        if image_data:
+            try:
+                image_string = image_data
+                mime_type = "image/jpeg"
+                if "," in image_string:
+                    header, image_string = image_string.split(",", 1)
+                    if "data:" in header and ";base64" in header:
+                        mime_type = header.split(";")[0].replace("data:", "")
+                image_bytes = base64.b64decode(image_string)
+            except Exception:
+                return jsonify({"reply": "The image could not be processed.", "success": False}), 400
 
-        return jsonify({
-            "status": "OK",
-            "reply": answer,
-            "assistant": ASSISTANT_NAME,
-            "role": role,
-            "provider": provider,
-            "timestamp": utc_now()
-        })
+            image_data_url = f"data:{mime_type};base64," + base64.b64encode(image_bytes).decode("utf-8")
+            vision_messages = [
+                {"role": "system", "content": _system_with_memory()},
+                {"role": "user", "content": [
+                    {"type": "text", "text": user_message},
+                    {"type": "image_url", "image_url": {"url": image_data_url}}
+                ]}
+            ]
+            try:
+                answer = openrouter_request(OPENROUTER_VISION_MODEL, vision_messages, OPENROUTER_VISION_TIMEOUT)
+                _remember_message("assistant", answer, project_id)
+                return jsonify({"reply": answer, "success": True, "provider": "Gemma 4 31B"})
+            except Exception:
+                pass
+
+            try:
+                formatted_contents = []
+                if isinstance(history, list):
+                    for item in history:
+                        if not isinstance(item, dict):
+                            continue
+                        text = str(item.get("text", "")).strip()
+                        if not text:
+                            continue
+                        role = "user" if item.get("sender", "user") == "user" else "model"
+                        formatted_contents.append(types.Content(role=role, parts=[types.Part.from_text(text=text)]))
+                formatted_contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user_message), types.Part.from_bytes(data=image_bytes, mime_type=mime_type)]))
+                answer = gemini_request(formatted_contents)
+                _remember_message("assistant", answer, project_id)
+                return jsonify({"reply": answer, "success": True, "provider": "Gemini"})
+            except Exception as exc:
+                return jsonify({"reply": "تمام image APIs ناکام ہوئیں: " + str(exc), "success": False}), 502
+
+        text_messages = _messages_from_history(history, user_message)
+        try:
+            answer = openrouter_request_with_tools(OPENROUTER_PRIMARY_MODEL, text_messages, OPENROUTER_PRIMARY_TIMEOUT, user_message)
+            _remember_message("assistant", answer, project_id)
+            return jsonify({"reply": answer, "success": True, "provider": "MiniMax M3"})
+        except Exception:
+            pass
+
+        try:
+            answer = openrouter_request_with_tools(OPENROUTER_SECONDARY_MODEL, text_messages, OPENROUTER_SECONDARY_TIMEOUT, user_message)
+            _remember_message("assistant", answer, project_id)
+            return jsonify({"reply": answer, "success": True, "provider": "Nemotron 3 Ultra"})
+        except Exception:
+            pass
+
+        try:
+            formatted_contents = []
+            if isinstance(history, list):
+                for item in history:
+                    if not isinstance(item, dict):
+                        continue
+                    text = str(item.get("text", "")).strip()
+                    if not text:
+                        continue
+                    role = "user" if item.get("sender", "user") == "user" else "model"
+                    formatted_contents.append(types.Content(role=role, parts=[types.Part.from_text(text=text)]))
+            formatted_contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user_message)]))
+            answer = gemini_request(formatted_contents)
+            _remember_message("assistant", answer, project_id)
+            return jsonify({"reply": answer, "success": True, "provider": "Gemini"})
+        except Exception as exc:
+            return jsonify({"reply": "تمام AI APIs ناکام ہوئیں: " + str(exc), "success": False}), 502
 
     except Exception as exc:
+        return jsonify({"reply": f"خرابی: {str(exc)}", "success": False}), 500
 
-        error_id = create_error_id()
-
-        logger.error(
-            "AI request failed | "
-            "error_id=%s | "
-            "endpoint=%s | "
-            "role=%s",
-            error_id,
-            endpoint,
-            role,
-            exc_info=True
-        )
-
-        # --------------------------------------------------
-        # OWNER GETS FULL DIAGNOSTIC INFORMATION
-        # --------------------------------------------------
-
-        if role == "OWNER":
-
-            response = owner_error_response(
-                error_id=error_id,
-                endpoint=endpoint,
-                function_name=function_name,
-                exception=exc
-            )
-
-            return jsonify(response), 503
-
-        # --------------------------------------------------
-        # USER GETS ONLY FRIENDLY ENGLISH MESSAGE
-        # --------------------------------------------------
-
-        return json_error(
-            USER_MESSAGES["ai_unavailable"],
-            503,
-            error_id=error_id
-        )
-
-
-# ==========================================================================
-# 15. OWNER AUTHENTICATION
-# ==========================================================================
-
-@app.route(
-    "/api/auth/owner",
-    methods=["POST"]
-)
-def authenticate_owner():
-
-    data = get_json_body()
-
-    passcode = str(
-        data.get("passcode", "")
-    )
-
-    if not passcode:
-
-        return json_error(
-            "Please enter your owner passcode.",
-            400
-        )
-
-    try:
-
-        authenticated = secrets.compare_digest(
-            passcode,
-            OWNER_TOKEN
-        )
-
-    except Exception:
-
-        authenticated = False
-
-    if authenticated:
-
-        return jsonify({
-            "status": "OK",
-            "authenticated": True,
-            "role": "OWNER",
-            "message": "Owner authentication successful.",
-            "timestamp": utc_now()
-        })
-
-    return jsonify({
-        "status": "ERROR",
-        "authenticated": False,
-        "role": "USER",
-        "error": USER_MESSAGES["login_failed"],
-        "timestamp": utc_now()
-    }), 401
-
-
-# ==========================================================================
-# 16. REMOTE SECURITY COMMAND
-# ==========================================================================
-
-@app.route(
-    "/api/security/remote-command",
-    methods=["POST"]
-)
-def execute_remote_command():
-
-    endpoint = "/api/security/remote-command"
-    function_name = "execute_remote_command"
-
-    data = get_json_body()
-
-    app_code = str(
-        data.get("app_code", "")
-    ).strip()
-
-    otp_code = str(
-        data.get("otp_code", "")
-    ).strip()
-
-    command_type = str(
-        data.get("command_type", "")
-    ).strip()
-
-    role = get_request_role(data)
-
-    # ------------------------------------------------------
-    # App Code
-    # ------------------------------------------------------
-
-    try:
-
-        valid_app_code = secrets.compare_digest(
-            app_code,
-            MASTER_APP_CODE
-        )
-
-    except Exception:
-
-        valid_app_code = False
-
-    if not valid_app_code:
-
-        return json_error(
-            USER_MESSAGES["invalid_app_code"],
-            401
-        )
-
-    # ------------------------------------------------------
-    # OTP
-    # ------------------------------------------------------
-
-    with OTP_LOCK:
-
-        if otp_code not in VALID_OTP_CODES:
-
-            return json_error(
-                USER_MESSAGES["invalid_otp"],
-                403
-            )
-
-        # Burn immediately.
-        VALID_OTP_CODES.remove(
-            otp_code
-        )
-
-    # ------------------------------------------------------
-    # SAFE FOLDER
-    # ------------------------------------------------------
-
-    if command_type == "WIPE_SAFE_FOLDER":
-
-        return jsonify({
-            "status": "Success",
-            "command": "WIPE_SAFE_FOLDER",
-            "message": (
-                "Security command accepted. "
-                "The one-time security code has been consumed."
-            ),
-            "ai_visibility": "0%",
-            "otp_burned": True,
-            "timestamp": utc_now()
-        })
-
-    # ------------------------------------------------------
-    # LOCATION
-    # ------------------------------------------------------
-
-    if command_type == "ANTI_THEFT_LOC":
-
-        return jsonify({
-            "status": "Success",
-            "command": "ANTI_THEFT_LOC",
-            "action": "FETCH_LOCATION",
-            "message": (
-                "The authorized location request has been accepted."
-            ),
-            "otp_burned": True,
-            "timestamp": utc_now()
-        })
-
-    # ------------------------------------------------------
-    # SECURITY STATUS
-    # ------------------------------------------------------
-
-    if command_type == "SECURITY_STATUS":
-
-        with OTP_LOCK:
-
-            remaining_codes = len(
-                VALID_OTP_CODES
-            )
-
-        return jsonify({
-            "status": "Success",
-            "command": "SECURITY_STATUS",
-            "remaining_one_time_codes": remaining_codes,
-            "otp_burned": True,
-            "timestamp": utc_now()
-        })
-
-    # ------------------------------------------------------
-    # UNKNOWN COMMAND
-    # ------------------------------------------------------
-
-    return jsonify({
-        "status": "Success",
-        "command": command_type,
-        "message": (
-            "The security command was accepted, "
-            "but this command is not configured yet."
-        ),
-        "otp_burned": True,
-        "timestamp": utc_now()
-    })
-
-
-# ==========================================================================
-# 17. SECURITY STATUS
-# ==========================================================================
-
-@app.route(
-    "/api/security/status",
-    methods=["GET"]
-)
-def security_status():
-
-    with OTP_LOCK:
-
-        remaining_codes = len(
-            VALID_OTP_CODES
-        )
-
-    return jsonify({
-        "status": "OK",
-        "security_engine": "Active",
-        "app_name": APP_NAME,
-        "assistant": ASSISTANT_NAME,
-        "remaining_one_time_codes": remaining_codes,
-        "timestamp": utc_now()
-    })
-
-
-# ==========================================================================
-# 18. GENERATE NEW ONE-TIME CODE
-# ==========================================================================
-
-@app.route(
-    "/api/security/generate-code",
-    methods=["POST"]
-)
-def generate_security_code():
-
-    data = get_json_body()
-
-    # Only authenticated Owner can generate a code.
-    if not is_owner_authenticated(data):
-
-        return json_error(
-            USER_MESSAGES["access_denied"],
-            401
-        )
-
-    new_code = (
-        f"{secrets.randbelow(1000000):06d}"
-    )
-
-    with OTP_LOCK:
-
-        VALID_OTP_CODES.add(
-            new_code
-        )
-
-    return jsonify({
-        "status": "Success",
-        "message": (
-            "A new one-time security code "
-            "has been generated."
-        ),
-        "code": new_code,
-        "one_time": True,
-        "timestamp": utc_now()
-    })
-
-
-# ==========================================================================
-# 19. ERROR HANDLERS
-# ==========================================================================
-
-@app.errorhandler(404)
-def not_found(error):
-
-    return json_error(
-        "The requested service could not be found.",
-        404
-    )
-
-
-@app.errorhandler(405)
-def method_not_allowed(error):
-
-    return json_error(
-        "This request method is not supported.",
-        405
-    )
-
-
-@app.errorhandler(500)
-def internal_server_error(error):
-
-    error_id = create_error_id()
-
-    logger.error(
-        "Internal server error | error_id=%s",
-        error_id,
-        exc_info=True
-    )
-
-    return json_error(
-        USER_MESSAGES["server_error"],
-        500,
-        error_id=error_id
-    )
-
-
-# ==========================================================================
-# 20. APPLICATION START
-# ==========================================================================
 
 if __name__ == "__main__":
-
-    port = int(
-        os.environ.get(
-            "PORT",
-            5000
-        )
-    )
-
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False
-    )
+    print("AI Assistant server starting...")
+    print(f"OpenRouter primary: {OPENROUTER_PRIMARY_MODEL} ({OPENROUTER_PRIMARY_TIMEOUT}s)")
+    print(f"OpenRouter secondary: {OPENROUTER_SECONDARY_MODEL} ({OPENROUTER_SECONDARY_TIMEOUT}s)")
+    print(f"OpenRouter vision: {OPENROUTER_VISION_MODEL} ({OPENROUTER_VISION_TIMEOUT}s)")
+    print(f"Gemini: {GEMINI_MODEL} ({GEMINI_TIMEOUT_MS / 1000.0:g}s)")
+    print("Local memory: " + ("AVAILABLE" if LOCAL_MEMORY_AVAILABLE else "UNAVAILABLE"))
+    if LOCAL_MEMORY_ERROR:
+        print("Local memory warning: " + LOCAL_MEMORY_ERROR)
+    print("Development tools: " + ("AVAILABLE" if DEVELOPMENT_TOOLS_AVAILABLE else "UNAVAILABLE"))
+    if DEVELOPMENT_TOOLS_ERROR:
+        print("Development tools warning: " + DEVELOPMENT_TOOLS_ERROR)
+    app.run(host="0.0.0.0", port=5000, debug=True)
