@@ -426,7 +426,7 @@ def development_tools():
     action = str(data.get("action", "")).strip()
     if not tool or not action:
         return jsonify({"success": False, "reply": "Development tool اور action ضروری ہیں۔"}), 400
-    success, result = _execute_development_tool(tool, action, data, str(data.get("user_message", "")))
+    success, result = _execute_development_tool(tool, action, data.get("arguments", {}), str(data.get("user_message", "")))
     return jsonify({"success": bool(success), "tool": tool, "action": action, "result": result}), (200 if success else 400)
 
 
