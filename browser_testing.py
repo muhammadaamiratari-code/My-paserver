@@ -3,6 +3,7 @@ import os
 import urllib.parse
 import urllib.request
 import webbrowser
+import subprocess
 from datetime import datetime
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +64,13 @@ def open_browser(url):
     try:
         url = _safe_url(url)
         opened = webbrowser.open(url)
-        message = "URL browser میں کھولنے کی درخواست کامیاب ہوئی۔" if opened else "Browser launch environment میں دستیاب نہیں۔ URL خود browser میں کھولا جا سکتا ہے۔"
+        if not opened:
+            try:
+                result = subprocess.run(["am", "start", "-a", "android.intent.action.VIEW", "-d", url], capture_output=True, text=True, timeout=10)
+                opened = result.returncode == 0
+            except Exception:
+                opened = False
+        message = "URL browser میں کامیابی سے کھول دیا گیا۔" if opened else "Browser launch environment میں دستیاب نہیں۔ URL خود browser میں کھولا جا سکتا ہے۔"
         _log_browser_test("open_url", url, bool(opened), message)
         return bool(opened), message
     except Exception as e:
@@ -112,3 +119,5 @@ def test_form(url, form_data, method="POST"):
     except Exception as e:
         _log_browser_test("form_test", str(url), False, str(e))
         return False, f"Form test میں مسئلہ: {e}"
+
+
