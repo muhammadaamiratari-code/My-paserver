@@ -1,0 +1,3 @@
+ALTER TABLE jobs ADD COLUMN prompt TEXT;
+ALTER TABLE jobs ADD COLUMN duration_seconds INTEGER;
+ALTER TABLE jobs ADD COLUMN style TEXT;

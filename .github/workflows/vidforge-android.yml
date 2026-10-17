@@ -1,0 +1,43 @@
+name: VidForge Android Build
+
+on:
+  push:
+    branches:
+      - development-system-test
+    paths:
+      - 'vidforge/**'
+      - '.github/workflows/vidforge-android.yml'
+  pull_request:
+    branches:
+      - development-system-test
+    paths:
+      - 'vidforge/**'
+      - '.github/workflows/vidforge-android.yml'
+  workflow_dispatch:
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-9.5.0-bin.zip -O "$RUNNER_TEMP/gradle.zip"
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/gradle-9.5.0/bin" >> "$GITHUB_PATH"
+
+      - name: Build VidForge APK
+        working-directory: vidforge/android
+        run: gradle assembleDebug
